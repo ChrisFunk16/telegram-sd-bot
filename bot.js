@@ -144,8 +144,8 @@ async function generateImage(chatId, prompt) {
     // Status-Nachricht löschen
     await bot.deleteMessage(chatId, statusMsg.message_id);
     
-    // Caption mit LoRA-Info
-    let caption = `🎨 *Prompt:* ${prompt}\n\n`;
+    // Caption mit LoRA-Info (ohne Markdown wegen <> in LoRA-Syntax)
+    let caption = `🎨 Prompt: ${prompt}\n\n`;
     
     if (DEFAULT_CONFIG.loras && DEFAULT_CONFIG.loras.length > 0) {
       const loraInfo = DEFAULT_CONFIG.loras.map(l => `${l.name} (${l.weight})`).join(', ');
@@ -154,10 +154,9 @@ async function generateImage(chatId, prompt) {
     
     caption += `Steps: ${DEFAULT_CONFIG.steps} | CFG: ${DEFAULT_CONFIG.cfg_scale} | ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}`;
     
-    // Bild senden
+    // Bild senden (ohne parse_mode wegen LoRA <> Zeichen)
     await bot.sendPhoto(chatId, imageBuffer, {
-      caption: caption,
-      parse_mode: 'Markdown'
+      caption: caption
     });
     
     console.log(`[${new Date().toISOString()}] ✅ Image sent to chat ${chatId}`);
