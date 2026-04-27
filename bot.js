@@ -19,7 +19,7 @@ const DEFAULT_CONFIG = {
   negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
   seed: -1,  // Random seed
   loras: [
-    { name: "yuki", weight: 0.8 }  // LoRA Name + Stärke (0.0-1.0)
+    { name: "yuki_lora", weight: 0.7 }  // LoRA Name + Stärke (0.0-1.0)
   ]
 };
 

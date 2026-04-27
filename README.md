@@ -90,7 +90,7 @@ Der Bot generiert automatisch ein Bild!
   negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
   seed: -1,  // Random
   loras: [
-    { name: "yuki", weight: 0.8 }  // LoRA Name + Stärke (0.0-1.0)
+    { name: "yuki_lora", weight: 0.7 }  // LoRA Name + Stärke (0.0-1.0)
   ]
 }
 ```
@@ -103,7 +103,7 @@ Der Bot unterstützt LoRAs! Füge sie in der Config hinzu:
 
 ```javascript
 loras: [
-  { name: "yuki", weight: 0.8 },
+  { name: "yuki_lora", weight: 0.7 },
   { name: "another_lora", weight: 0.6 }
 ]
 ```
@@ -114,7 +114,7 @@ loras: [
 - Höher = stärkerer Einfluss
 - Niedriger = subtiler
 
-Die LoRAs werden automatisch in jeden Prompt eingebaut: `<lora:yuki:0.8> your prompt here`
+Die LoRAs werden automatisch in jeden Prompt eingebaut: `<lora:yuki_lora:0.7> your prompt here`
 
 ## Troubleshooting
 
