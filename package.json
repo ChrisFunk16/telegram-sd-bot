@@ -1,0 +1,15 @@
+{
+  "name": "telegram-sd-bot",
+  "version": "1.0.0",
+  "description": "Telegram Bot für Automatic1111 Stable Diffusion Bildergeneration",
+  "main": "bot.js",
+  "type": "module",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "dotenv": "^16.4.5",
+    "axios": "^1.7.2"
+  }
+}
