@@ -20,7 +20,8 @@ const DEFAULT_CONFIG = {
   seed: -1,  // Random seed
   loras: [
     { name: "yuki_lora", weight: 0.7 }  // LoRA Name + Stärke (0.0-1.0)
-  ]
+  ],
+  default_prompt_prefix: "yukichar, 1girl, purple hair"  // Standard-Tags vor jedem Prompt
 };
 
 // Bot initialisieren
@@ -47,14 +48,15 @@ bot.onText(/\/help/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId,
     `*Wie benutzt man den Bot:*\n\n` +
-    `1️⃣ Sende einen Prompt: \`/generate a cat in space\`\n` +
-    `2️⃣ Oder schreib einfach direkt: \`a beautiful sunset\`\n\n` +
+    `1️⃣ Sende einen Prompt: \`/generate sitting on a bench\`\n` +
+    `2️⃣ Oder schreib einfach direkt: \`walking in a forest\`\n\n` +
     `*Einstellungen:*\n` +
     `• Steps: ${DEFAULT_CONFIG.steps}\n` +
     `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
     `• Größe: ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}\n` +
-    `• Sampler: ${DEFAULT_CONFIG.sampler_name}\n\n` +
-    `Negative Prompt ist voreingestellt (low quality, blurry, etc.)`,
+    `• Sampler: ${DEFAULT_CONFIG.sampler_name}\n` +
+    `• Default Prefix: ${DEFAULT_CONFIG.default_prompt_prefix || 'Keiner'}\n\n` +
+    `LoRAs und Negative Prompts sind voreingestellt. Nutze /settings für Details.`,
     { parse_mode: 'Markdown' }
   );
 });
@@ -68,16 +70,18 @@ bot.onText(/\/settings/, (msg) => {
     loraText = DEFAULT_CONFIG.loras.map(l => `${l.name} (${l.weight})`).join(', ');
   }
   
+  let prefixText = DEFAULT_CONFIG.default_prompt_prefix || 'Keiner';
+  
   bot.sendMessage(chatId,
-    `⚙️ *Aktuelle Einstellungen:*\n\n` +
+    `⚙️ Aktuelle Einstellungen:\n\n` +
     `• Steps: ${DEFAULT_CONFIG.steps}\n` +
     `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
     `• Auflösung: ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}\n` +
     `• Sampler: ${DEFAULT_CONFIG.sampler_name}\n` +
     `• LoRAs: ${loraText}\n` +
+    `• Default Prefix: ${prefixText}\n` +
     `• Negative Prompt: ${DEFAULT_CONFIG.negative_prompt}\n` +
-    `• Seed: ${DEFAULT_CONFIG.seed === -1 ? 'Random' : DEFAULT_CONFIG.seed}`,
-    { parse_mode: 'Markdown' }
+    `• Seed: ${DEFAULT_CONFIG.seed === -1 ? 'Random' : DEFAULT_CONFIG.seed}`
   );
 });
 
@@ -106,18 +110,28 @@ async function generateImage(chatId, prompt) {
     // Status-Nachricht
     const statusMsg = await bot.sendMessage(chatId, '🎨 Generiere Bild...');
     
-    console.log(`[${new Date().toISOString()}] Generating: "${prompt}"`);
+    console.log(`[${new Date().toISOString()}] User prompt: "${prompt}"`);
     
-    // LoRAs in Prompt einbauen
-    let fullPrompt = prompt;
+    // Build full prompt: LoRAs + Default Prefix + User Prompt
+    let fullPrompt = '';
+    
+    // 1. LoRAs hinzufügen
     if (DEFAULT_CONFIG.loras && DEFAULT_CONFIG.loras.length > 0) {
       const loraStrings = DEFAULT_CONFIG.loras.map(lora => 
         `<lora:${lora.name}:${lora.weight}>`
       );
-      fullPrompt = `${loraStrings.join(' ')} ${prompt}`;
+      fullPrompt += loraStrings.join(' ') + ' ';
     }
     
-    console.log(`[${new Date().toISOString()}] Full prompt with LoRAs: "${fullPrompt}"`);
+    // 2. Default Prefix hinzufügen
+    if (DEFAULT_CONFIG.default_prompt_prefix) {
+      fullPrompt += DEFAULT_CONFIG.default_prompt_prefix + ', ';
+    }
+    
+    // 3. User Prompt hinzufügen
+    fullPrompt += prompt;
+    
+    console.log(`[${new Date().toISOString()}] Full prompt: "${fullPrompt}"`);
     
     // API Request an Automatic1111
     const payload = {

@@ -91,11 +91,22 @@ Der Bot generiert automatisch ein Bild!
   seed: -1,  // Random
   loras: [
     { name: "yuki_lora", weight: 0.7 }  // LoRA Name + Stärke (0.0-1.0)
-  ]
+  ],
+  default_prompt_prefix: "yukichar, 1girl, purple hair"  // Standard-Tags vor jedem Prompt
 }
 ```
 
 Diese kannst du in `bot.js` unter `DEFAULT_CONFIG` anpassen.
+
+### Default Prompt Prefix
+
+Der Bot fügt automatisch einen Prefix vor JEDEN User-Prompt ein:
+
+**Beispiel:**
+- User schreibt: `sitting on a bench`
+- Tatsächlicher Prompt: `<lora:yuki_lora:0.7> yukichar, 1girl, purple hair, sitting on a bench`
+
+So musst du nicht jedes Mal die Character-Tags eingeben! Passe den `default_prompt_prefix` in der Config an oder setze ihn auf `null` um ihn zu deaktivieren.
 
 ### LoRA Support
 
