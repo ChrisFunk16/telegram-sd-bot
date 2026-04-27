@@ -88,11 +88,33 @@ Der Bot generiert automatisch ein Bild!
   height: 512,
   sampler_name: "Euler a",
   negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
-  seed: -1  // Random
+  seed: -1,  // Random
+  loras: [
+    { name: "yuki", weight: 0.8 }  // LoRA Name + Stärke (0.0-1.0)
+  ]
 }
 ```
 
 Diese kannst du in `bot.js` unter `DEFAULT_CONFIG` anpassen.
+
+### LoRA Support
+
+Der Bot unterstützt LoRAs! Füge sie in der Config hinzu:
+
+```javascript
+loras: [
+  { name: "yuki", weight: 0.8 },
+  { name: "another_lora", weight: 0.6 }
+]
+```
+
+**Wichtig:** Der Name muss EXAKT dem Dateinamen in deinem A1111 `models/Lora/` Ordner entsprechen (ohne `.safetensors`).
+
+**Weight:** 0.0 - 1.0 (Standard: 0.7-0.8)
+- Höher = stärkerer Einfluss
+- Niedriger = subtiler
+
+Die LoRAs werden automatisch in jeden Prompt eingebaut: `<lora:yuki:0.8> your prompt here`
 
 ## Troubleshooting
 

@@ -17,7 +17,10 @@ const DEFAULT_CONFIG = {
   height: 512,
   sampler_name: "Euler a",
   negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
-  seed: -1  // Random seed
+  seed: -1,  // Random seed
+  loras: [
+    { name: "yuki", weight: 0.8 }  // LoRA Name + Stärke (0.0-1.0)
+  ]
 };
 
 // Bot initialisieren
@@ -59,12 +62,19 @@ bot.onText(/\/help/, (msg) => {
 // /settings Command
 bot.onText(/\/settings/, (msg) => {
   const chatId = msg.chat.id;
+  
+  let loraText = 'Keine';
+  if (DEFAULT_CONFIG.loras && DEFAULT_CONFIG.loras.length > 0) {
+    loraText = DEFAULT_CONFIG.loras.map(l => `${l.name} (${l.weight})`).join(', ');
+  }
+  
   bot.sendMessage(chatId,
     `⚙️ *Aktuelle Einstellungen:*\n\n` +
     `• Steps: ${DEFAULT_CONFIG.steps}\n` +
     `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
     `• Auflösung: ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}\n` +
     `• Sampler: ${DEFAULT_CONFIG.sampler_name}\n` +
+    `• LoRAs: ${loraText}\n` +
     `• Negative Prompt: ${DEFAULT_CONFIG.negative_prompt}\n` +
     `• Seed: ${DEFAULT_CONFIG.seed === -1 ? 'Random' : DEFAULT_CONFIG.seed}`,
     { parse_mode: 'Markdown' }
@@ -98,9 +108,20 @@ async function generateImage(chatId, prompt) {
     
     console.log(`[${new Date().toISOString()}] Generating: "${prompt}"`);
     
+    // LoRAs in Prompt einbauen
+    let fullPrompt = prompt;
+    if (DEFAULT_CONFIG.loras && DEFAULT_CONFIG.loras.length > 0) {
+      const loraStrings = DEFAULT_CONFIG.loras.map(lora => 
+        `<lora:${lora.name}:${lora.weight}>`
+      );
+      fullPrompt = `${loraStrings.join(' ')} ${prompt}`;
+    }
+    
+    console.log(`[${new Date().toISOString()}] Full prompt with LoRAs: "${fullPrompt}"`);
+    
     // API Request an Automatic1111
     const payload = {
-      prompt: prompt,
+      prompt: fullPrompt,
       negative_prompt: DEFAULT_CONFIG.negative_prompt,
       steps: DEFAULT_CONFIG.steps,
       cfg_scale: DEFAULT_CONFIG.cfg_scale,
@@ -123,10 +144,19 @@ async function generateImage(chatId, prompt) {
     // Status-Nachricht löschen
     await bot.deleteMessage(chatId, statusMsg.message_id);
     
+    // Caption mit LoRA-Info
+    let caption = `🎨 *Prompt:* ${prompt}\n\n`;
+    
+    if (DEFAULT_CONFIG.loras && DEFAULT_CONFIG.loras.length > 0) {
+      const loraInfo = DEFAULT_CONFIG.loras.map(l => `${l.name} (${l.weight})`).join(', ');
+      caption += `LoRA: ${loraInfo}\n`;
+    }
+    
+    caption += `Steps: ${DEFAULT_CONFIG.steps} | CFG: ${DEFAULT_CONFIG.cfg_scale} | ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}`;
+    
     // Bild senden
     await bot.sendPhoto(chatId, imageBuffer, {
-      caption: `🎨 *Prompt:* ${prompt}\n\n` +
-               `Steps: ${DEFAULT_CONFIG.steps} | CFG: ${DEFAULT_CONFIG.cfg_scale} | ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}`,
+      caption: caption,
       parse_mode: 'Markdown'
     });
     
