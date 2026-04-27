@@ -14,10 +14,16 @@ const DEFAULT_CONFIG = {
   steps: 30,
   cfg_scale: 7,
   width: 512,
-  height: 512,
-  sampler_name: "Euler a",
+  height: 640,
+  sampler_name: "DPM++ 2M Karras",
   negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
   seed: -1,  // Random seed
+  
+  // Model Settings
+  checkpoint: "aom3.safetensors",
+  vae: "vae-ft-mse-840000-ema-pruned.safetensors",
+  
+  // LoRA + Default Prefix
   loras: [
     { name: "yuki_lora", weight: 0.7 }  // LoRA Name + Stärke (0.0-1.0)
   ],
@@ -74,6 +80,8 @@ bot.onText(/\/settings/, (msg) => {
   
   bot.sendMessage(chatId,
     `⚙️ Aktuelle Einstellungen:\n\n` +
+    `• Model: ${DEFAULT_CONFIG.checkpoint}\n` +
+    `• VAE: ${DEFAULT_CONFIG.vae}\n` +
     `• Steps: ${DEFAULT_CONFIG.steps}\n` +
     `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
     `• Auflösung: ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}\n` +
@@ -142,7 +150,14 @@ async function generateImage(chatId, prompt) {
       width: DEFAULT_CONFIG.width,
       height: DEFAULT_CONFIG.height,
       sampler_name: DEFAULT_CONFIG.sampler_name,
-      seed: DEFAULT_CONFIG.seed
+      seed: DEFAULT_CONFIG.seed,
+      
+      // Model & VAE Override
+      override_settings: {
+        sd_model_checkpoint: DEFAULT_CONFIG.checkpoint,
+        sd_vae: DEFAULT_CONFIG.vae
+      },
+      override_settings_restore_afterwards: false
     };
     
     const response = await axios.post(

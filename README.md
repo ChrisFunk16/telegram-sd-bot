@@ -85,14 +85,20 @@ Der Bot generiert automatisch ein Bild!
   steps: 30,
   cfg_scale: 7,
   width: 512,
-  height: 512,
-  sampler_name: "Euler a",
+  height: 640,
+  sampler_name: "DPM++ 2M Karras",
   negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
   seed: -1,  // Random
+  
+  // Model Settings
+  checkpoint: "aom3.safetensors",
+  vae: "vae-ft-mse-840000-ema-pruned.safetensors",
+  
+  // LoRA + Default Prefix
   loras: [
-    { name: "yuki_lora", weight: 0.7 }  // LoRA Name + Stärke (0.0-1.0)
+    { name: "yuki_lora", weight: 0.7 }
   ],
-  default_prompt_prefix: "yukichar, 1girl, purple hair"  // Standard-Tags vor jedem Prompt
+  default_prompt_prefix: "yukichar, 1girl, purple hair"
 }
 ```
 
@@ -134,6 +140,30 @@ Die LoRAs werden automatisch in jeden Prompt eingebaut: `<lora:yuki_lora:0.7> yo
 - Stelle sicher, dass A1111 läuft: `http://127.0.0.1:7860`
 - Prüfe ob `--api` Flag gesetzt ist
 - Teste manuell: `curl http://127.0.0.1:7860/sdapi/v1/txt2img`
+
+### LoRA funktioniert nicht / Bilder sehen falsch aus
+
+**1. Check LoRA Dateinamen:**
+- Öffne `models/Lora/` in deinem A1111 Ordner
+- Dateiname MUSS EXAKT übereinstimmen (ohne `.safetensors`)
+- Beispiel: Datei heißt `yuki_lora.safetensors` → Config: `name: "yuki_lora"`
+
+**2. Check in A1111 WebUI:**
+- Öffne http://127.0.0.1:7860
+- Generiere ein Bild mit: `<lora:yuki_lora:0.7> test`
+- Funktioniert es manuell? → LoRA ist OK
+- Funktioniert es nicht? → LoRA nicht geladen/falscher Name
+
+**3. Console Logs checken:**
+- Der Bot logged den Full Prompt inkl. LoRA
+- Beispiel: `Full prompt: "<lora:yuki_lora:0.7> yukichar, 1girl, purple hair, ..."`
+- Stimmt der LoRA-Name?
+
+### Model/VAE nicht gefunden
+
+- Check `models/Stable-diffusion/` für Checkpoint
+- Check `models/VAE/` für VAE
+- Namen MÜSSEN EXAKT übereinstimmen (inkl. `.safetensors`)
 
 ### "Polling error"
 
