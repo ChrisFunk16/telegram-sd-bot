@@ -47,71 +47,71 @@ const DEFAULT_CONFIG = {
 
 const LORA_CATEGORIES = {
   clothing: [
-    { name: 'asos-kokoboots-n', display: '👢 Boots' },
-    { name: 'bike_shorts_noobaI_V1.0', display: '🚴 Bike Shorts' },
-    { name: 'bra_peek_irl_goofy', display: '👙 Bra Peek' },
-    { name: 'cmo-fashion-illustriousxl-lora-nochekai', display: '👗 Fashion' },
-    { name: 'hotpants_noobaI_V1.0', display: '🩳 Hotpants' },
-    { name: 'JuicyTrackSuitILL', display: '🏃 Tracksuit' },
-    { name: 'jyojifuku_illustrious_V2.0', display: '👔 Jyojifuku' },
-    { name: 'oversized shirt_noobal_V1.0', display: '👕 Oversized Shirt' },
-    { name: 'PYGmalionWomanILL', display: '👗 Pygmalion' },
-    { name: 'SecretaryLingerieILL', display: '💼 Secretary' },
-    { name: 'taisouifuku_noobal_V1.0', display: '🤸 Gym Outfit' },
-    { name: 'thickblackhighlights_i1_v2', display: '✨ Highlights' },
-    { name: 'volleyball uniform', display: '🏐 Volleyball' },
-    { name: 'xlAEC_g102', display: '🎨 AEC Style' }
+    { name: 'asos-kokoboots-n', display: { de: '👢 Stiefel', es: '👢 Botas' } },
+    { name: 'bike_shorts_noobaI_V1.0', display: { de: '🚴 Rad-Shorts', es: '🚴 Shorts de Ciclismo' } },
+    { name: 'bra_peek_irl_goofy', display: { de: '👙 BH-Blick', es: '👙 Brasier Visible' } },
+    { name: 'cmo-fashion-illustriousxl-lora-nochekai', display: { de: '👗 Mode', es: '👗 Moda' } },
+    { name: 'hotpants_noobaI_V1.0', display: { de: '🩳 Hotpants', es: '🩳 Pantalones Cortos' } },
+    { name: 'JuicyTrackSuitILL', display: { de: '🏃 Trainingsanzug', es: '🏃 Chándal' } },
+    { name: 'jyojifuku_illustrious_V2.0', display: { de: '👔 Jyojifuku', es: '👔 Jyojifuku' } },
+    { name: 'oversized shirt_noobal_V1.0', display: { de: '👕 Oversize-Shirt', es: '👕 Camisa Oversize' } },
+    { name: 'PYGmalionWomanILL', display: { de: '👗 Pygmalion', es: '👗 Pygmalion' } },
+    { name: 'SecretaryLingerieILL', display: { de: '💼 Sekretärin', es: '💼 Secretaria' } },
+    { name: 'taisouifuku_noobal_V1.0', display: { de: '🤸 Sport-Outfit', es: '🤸 Ropa Deportiva' } },
+    { name: 'thickblackhighlights_i1_v2', display: { de: '✨ Highlights', es: '✨ Reflejos' } },
+    { name: 'volleyball uniform', display: { de: '🏐 Volleyball', es: '🏐 Voleibol' } },
+    { name: 'xlAEC_g102', display: { de: '🎨 AEC Stil', es: '🎨 Estilo AEC' } }
   ],
   
   pose: [
-    { name: 'feet v2.1', display: '🦶 Feet Focus' },
-    { name: 'dio-brandes-pose-illustrious1-lora-nochelaiser', display: '🧍 Dio Brandes' },
-    { name: 'convenientcensoringinnetube_illust_v1', display: '🚫 Censoring Pose' },
-    { name: 'crossed arms_noobaI_V1.0', display: '✖️ Crossed Arms' },
-    { name: 'Cobra_pose', display: '🐍 Cobra Pose' },
-    { name: 'hand over own mouth_noobaI_V1.0', display: '🤭 Hand Over Mouth' },
-    { name: 'ironbend_illust_v1', display: '💪 Iron Bend' },
-    { name: 'skirt tug_illustrious_V2.0', display: '👗 Skirt Tug' },
-    { name: 'under covers - ll_v1.0', display: '🛏️ Under Covers' },
-    { name: 'labedon_illustrious', display: '😴 Laying Bed' },
-    { name: 'outstretched_legs_il_2_v2-final', display: '🦵 Outstretched Legs' }
+    { name: 'feet v2.1', display: { de: '🦶 Füße Fokus', es: '🦶 Enfoque Pies' } },
+    { name: 'dio-brandes-pose-illustrious1-lora-nochelaiser', display: { de: '🧍 Dio Brandes', es: '🧍 Dio Brandes' } },
+    { name: 'convenientcensoringinnetube_illust_v1', display: { de: '🚫 Zensur-Pose', es: '🚫 Pose Censurada' } },
+    { name: 'crossed arms_noobaI_V1.0', display: { de: '✖️ Verschränkte Arme', es: '✖️ Brazos Cruzados' } },
+    { name: 'Cobra_pose', display: { de: '🐍 Kobra-Pose', es: '🐍 Pose Cobra' } },
+    { name: 'hand over own mouth_noobaI_V1.0', display: { de: '🤭 Hand über Mund', es: '🤭 Mano en Boca' } },
+    { name: 'ironbend_illust_v1', display: { de: '💪 Iron Bend', es: '💪 Iron Bend' } },
+    { name: 'skirt tug_illustrious_V2.0', display: { de: '👗 Rock ziehen', es: '👗 Jalando Falda' } },
+    { name: 'under covers - ll_v1.0', display: { de: '🛏️ Unter Decke', es: '🛏️ Bajo Sábanas' } },
+    { name: 'labedon_illustrious', display: { de: '😴 Im Bett liegend', es: '😴 Acostada en Cama' } },
+    { name: 'outstretched_legs_il_2_v2-final', display: { de: '🦵 Ausgestreckte Beine', es: '🦵 Piernas Estiradas' } }
   ],
   
   background: [
-    { name: 'M4DSCIENCE3-PONYXL', display: '🔬 Mad Science Lab' },
-    { name: 'large_industrial_stud10-p', display: '🏭 Industrial Studio' },
-    { name: 'medieval_castle_prison_c3ll-p', display: '🏰 Castle Prison' },
-    { name: 'high_school_h4llw4y-p', display: '🏫 School Hallway' },
-    { name: 'baroque_gothic_ch4mb3r-p', display: '⛪ Gothic Chamber' },
-    { name: 'dirty_public_r3str00m-p', display: '🚻 Public Restroom' },
-    { name: 'Ayuri2424PDXL32v0.50[fa1-000009', display: '🎨 Ayuri Style' },
-    { name: 'landscape_PONY', display: '🌄 Landscape' },
-    { name: 'futuristic_high-tech_l4b0r4t0ry-p', display: '🔭 Futuristic Lab' },
-    { name: 'traditional_Japanese_d0j0-p', display: '🏯 Japanese Dojo' },
-    { name: 'glass_containment_ch4mb3r-p', display: '🧪 Glass Chamber' },
-    { name: 'medical_examination_r00m-p', display: '🏥 Medical Room' },
-    { name: 'SW01v1-5pb', display: '⭐ Star Wars 1' },
-    { name: 'SW_Planets_01pony', display: '🌌 Star Wars Planets' },
-    { name: 'girlikeconvexmirror_pony', display: '🪞 Convex Mirror' },
-    { name: 'cyberpunk_r00fb0p-p', display: '🌃 Cyberpunk Rooftop' },
-    { name: 'CWLost_city2pony', display: '🏛️ Lost City' },
-    { name: 'bedroom_0f_4_succubus-p', display: '😈 Succubus Bedroom' },
-    { name: 'prison_w4ll-p', display: '⛓️ Prison Wall' },
-    { name: 'futuristic_b3dr00m-p', display: '🛸 Futuristic Bedroom' }
+    { name: 'M4DSCIENCE3-PONYXL', display: { de: '🔬 Verrücktes Labor', es: '🔬 Laboratorio Loco' } },
+    { name: 'large_industrial_stud10-p', display: { de: '🏭 Industrie-Studio', es: '🏭 Estudio Industrial' } },
+    { name: 'medieval_castle_prison_c3ll-p', display: { de: '🏰 Schloss-Gefängnis', es: '🏰 Prisión Castillo' } },
+    { name: 'high_school_h4llw4y-p', display: { de: '🏫 Schul-Flur', es: '🏫 Pasillo Escuela' } },
+    { name: 'baroque_gothic_ch4mb3r-p', display: { de: '⛪ Gotische Kammer', es: '⛪ Cámara Gótica' } },
+    { name: 'dirty_public_r3str00m-p', display: { de: '🚻 Öffentl. Toilette', es: '🚻 Baño Público' } },
+    { name: 'Ayuri2424PDXL32v0.50[fa1-000009', display: { de: '🎨 Ayuri Stil', es: '🎨 Estilo Ayuri' } },
+    { name: 'landscape_PONY', display: { de: '🌄 Landschaft', es: '🌄 Paisaje' } },
+    { name: 'futuristic_high-tech_l4b0r4t0ry-p', display: { de: '🔭 Futurist. Labor', es: '🔭 Lab Futurista' } },
+    { name: 'traditional_Japanese_d0j0-p', display: { de: '🏯 Japan. Dojo', es: '🏯 Dojo Japonés' } },
+    { name: 'glass_containment_ch4mb3r-p', display: { de: '🧪 Glas-Kammer', es: '🧪 Cámara de Vidrio' } },
+    { name: 'medical_examination_r00m-p', display: { de: '🏥 Untersuchungs-Raum', es: '🏥 Sala Médica' } },
+    { name: 'SW01v1-5pb', display: { de: '⭐ Star Wars 1', es: '⭐ Star Wars 1' } },
+    { name: 'SW_Planets_01pony', display: { de: '🌌 Star Wars Planeten', es: '🌌 Planetas Star Wars' } },
+    { name: 'girlikeconvexmirror_pony', display: { de: '🪞 Konvex-Spiegel', es: '🪞 Espejo Convexo' } },
+    { name: 'cyberpunk_r00fb0p-p', display: { de: '🌃 Cyberpunk Dach', es: '🌃 Azotea Cyberpunk' } },
+    { name: 'CWLost_city2pony', display: { de: '🏛️ Verlorene Stadt', es: '🏛️ Ciudad Perdida' } },
+    { name: 'bedroom_0f_4_succubus-p', display: { de: '😈 Succubus-Schlafzi.', es: '😈 Cuarto Súcubo' } },
+    { name: 'prison_w4ll-p', display: { de: '⛓️ Gefängnis-Wand', es: '⛓️ Muro Prisión' } },
+    { name: 'futuristic_b3dr00m-p', display: { de: '🛸 Futurist. Schlafzi.', es: '🛸 Cuarto Futurista' } }
   ],
   
   style: [
-    { name: 'ExpressiveHGothicNeonIncaseStyleMixV2ALLXLbyUOC (1)', display: '🌆 Gothic Neon' },
-    { name: 'PatchouliStyle_v6', display: '🎨 Patchouli' },
-    { name: '19thwomensa', display: '👗 19th Century' },
-    { name: 'Anime_Figure_P1', display: '🗿 Anime Figure' },
-    { name: 'Fine_Anime_Screencap-PonyV2', display: '📺 Anime Screencap' },
-    { name: 'MeMxXLV3_TypeB_AutismMix', display: '🎭 MeMx Autism' },
-    { name: 'DisneyStudios.style-10', display: '🏰 Disney Studios' },
-    { name: 'lazyup(1)', display: '✨ LazyUp v1' },
-    { name: 'arcane_pony_v2_exmix', display: '🔮 Arcane Style' },
-    { name: 'lazyup', display: '✨ LazyUp v2' },
-    { name: 'S1_Dramatic_Lighting_v3', display: '💡 Dramatic Light' }
+    { name: 'ExpressiveHGothicNeonIncaseStyleMixV2ALLXLbyUOC (1)', display: { de: '🌆 Gothic Neon', es: '🌆 Neón Gótico' } },
+    { name: 'PatchouliStyle_v6', display: { de: '🎨 Patchouli', es: '🎨 Patchouli' } },
+    { name: '19thwomensa', display: { de: '👗 19. Jahrhundert', es: '👗 Siglo XIX' } },
+    { name: 'Anime_Figure_P1', display: { de: '🗿 Anime-Figur', es: '🗿 Figura Anime' } },
+    { name: 'Fine_Anime_Screencap-PonyV2', display: { de: '📺 Anime Screenshot', es: '📺 Captura Anime' } },
+    { name: 'MeMxXLV3_TypeB_AutismMix', display: { de: '🎭 MeMx Autism', es: '🎭 MeMx Autism' } },
+    { name: 'DisneyStudios.style-10', display: { de: '🏰 Disney Studios', es: '🏰 Disney Studios' } },
+    { name: 'lazyup(1)', display: { de: '✨ LazyUp v1', es: '✨ LazyUp v1' } },
+    { name: 'arcane_pony_v2_exmix', display: { de: '🔮 Arcane Stil', es: '🔮 Estilo Arcane' } },
+    { name: 'lazyup', display: { de: '✨ LazyUp v2', es: '✨ LazyUp v2' } },
+    { name: 'S1_Dramatic_Lighting_v3', display: { de: '💡 Dramat. Licht', es: '💡 Luz Dramática' } }
   ]
 };
 
@@ -245,10 +245,18 @@ function resetWizard(chatId) {
 
 // ==================== MENU BUILDERS ====================
 
+function getDisplayName(item, lang) {
+  if (typeof item.display === 'object') {
+    return item.display[lang] || item.display.de;
+  }
+  return item.display;
+}
+
 function buildCategoryMenu(chatId, category) {
   const session = getSession(chatId);
   const items = LORA_CATEGORIES[category];
   const selected = session.selections[category] || [];
+  const lang = session.language || 'de';
   
   const keyboard = [];
   
@@ -259,7 +267,7 @@ function buildCategoryMenu(chatId, category) {
     
     const row = [
       { 
-        text: checkmark1 + items[i].display, 
+        text: checkmark1 + getDisplayName(items[i], lang), 
         callback_data: `wiz_select_${category}_${i}` 
       }
     ];
@@ -268,7 +276,7 @@ function buildCategoryMenu(chatId, category) {
       const isSelected2 = selected.includes(i + 1);
       const checkmark2 = isSelected2 ? '✅ ' : '';
       row.push({ 
-        text: checkmark2 + items[i + 1].display, 
+        text: checkmark2 + getDisplayName(items[i + 1], lang), 
         callback_data: `wiz_select_${category}_${i + 1}` 
       });
     }
@@ -301,16 +309,18 @@ function buildCategoryMenu(chatId, category) {
 
 function getSelectionSummary(session) {
   let summary = '';
+  const lang = session.language || 'de';
   
   for (const [category, indices] of Object.entries(session.selections)) {
     if (indices.length > 0) {
       const items = LORA_CATEGORIES[category];
-      const names = indices.map(idx => items[idx].display);
+      const names = indices.map(idx => getDisplayName(items[idx], lang));
       summary += `${category}: ${names.join(', ')}\n`;
     }
   }
   
-  return summary || 'Keine Auswahl';
+  const noneText = lang === 'es' ? 'Ninguna selección' : 'Keine Auswahl';
+  return summary || noneText;
 }
 
 // ==================== BOT SETUP ====================
@@ -649,7 +659,7 @@ function showWizardStep(chatId) {
   
   const selected = session.selections[stepName] || [];
   const items = LORA_CATEGORIES[stepName];
-  const selectedNames = selected.map(idx => items[idx].display);
+  const selectedNames = selected.map(idx => getDisplayName(items[idx], lang));
   const selectionText = selectedNames.length > 0 ? selectedNames.join(', ') : t(chatId, 'none');
   
   const selectedLabel = lang === 'es' ? 'Seleccionado' : 'Ausgewählt';
@@ -822,6 +832,8 @@ bot.on('callback_query', async (query) => {
     
     const items = LORA_CATEGORIES[category];
     const item = items[index];
+    const lang = session.language || 'de';
+    const displayName = getDisplayName(item, lang);
     
     // Toggle selection
     const currentSelected = session.selections[category] || [];
@@ -830,14 +842,16 @@ bot.on('callback_query', async (query) => {
     if (indexPos > -1) {
       // Remove
       currentSelected.splice(indexPos, 1);
+      const removedText = lang === 'es' ? '❌ Deseleccionado' : '❌ Abgewählt';
       await bot.answerCallbackQuery(query.id, {
-        text: `❌ ${item.display} abgewählt`
+        text: `${removedText}: ${displayName}`
       });
     } else {
       // Add
       currentSelected.push(index);
+      const addedText = lang === 'es' ? '✅ Seleccionado' : '✅ Ausgewählt';
       await bot.answerCallbackQuery(query.id, {
-        text: `✅ ${item.display}`
+        text: `${addedText}: ${displayName}`
       });
     }
     
@@ -853,9 +867,9 @@ bot.on('callback_query', async (query) => {
     // Update text
     const stepNumber = session.currentStep + 1;
     const totalSteps = WIZARD_STEPS.length;
-    const selectedNames = currentSelected.map(idx => items[idx].display);
+    // lang already declared above, reuse it
+    const selectedNames = currentSelected.map(idx => getDisplayName(items[idx], lang));
     const selectionText = selectedNames.length > 0 ? selectedNames.join(', ') : t(chatId, 'none');
-    const lang = session.language || 'de';
     
     const selectedLabel = lang === 'es' ? 'Seleccionado' : 'Ausgewählt';
     const skipLabel = lang === 'es' ? 'Saltar' : 'Skip';
@@ -1043,11 +1057,13 @@ async function generateImage(chatId, prompt) {
     // Build caption
     let caption = `🎨 ${prompt}\n\n`;
     
+    const lang = session.language || 'de';
+    
     // Show selected LoRAs
     for (const [category, indices] of Object.entries(session.selections)) {
       if (indices.length > 0) {
         const items = LORA_CATEGORIES[category];
-        const names = indices.map(idx => items[idx].display);
+        const names = indices.map(idx => getDisplayName(items[idx], lang));
         caption += `${category}: ${names.join(', ')}\n`;
       }
     }
