@@ -233,6 +233,20 @@ bot.onText(/\/help/, (msg) => {
   );
 });
 
+bot.onText(/\/debug/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  
+  bot.sendMessage(chatId,
+    `🐛 *Debug Info*\n\n` +
+    `wizardActive: ${session.wizardActive}\n` +
+    `currentStep: ${session.currentStep}\n` +
+    `stepName: ${WIZARD_STEPS[session.currentStep]}\n` +
+    `selections: ${JSON.stringify(session.selections, null, 2)}`,
+    { parse_mode: 'Markdown' }
+  );
+});
+
 bot.onText(/\/settings/, (msg) => {
   const chatId = msg.chat.id;
   
@@ -276,9 +290,13 @@ function showWizardStep(chatId) {
   const session = getSession(chatId);
   const stepName = WIZARD_STEPS[session.currentStep];
   
+  console.log(`[WIZARD] Chat ${chatId} - Step ${session.currentStep}: ${stepName}`);
+  
   // Final step: Prompt input
   if (stepName === 'prompt') {
     const summary = getSelectionSummary(session);
+    
+    console.log(`[WIZARD] Showing prompt step. Summary: ${summary}`);
     
     bot.sendMessage(chatId,
       `📝 *Schritt 5/5: Prompt*\n\n` +
@@ -336,6 +354,8 @@ bot.on('callback_query', async (query) => {
   if (data === 'wiz_next') {
     // Move to next step
     session.currentStep++;
+    
+    console.log(`[WIZARD] Next clicked. New step: ${session.currentStep} (${WIZARD_STEPS[session.currentStep]})`);
     
     await bot.answerCallbackQuery(query.id, {
       text: '▶️ Weiter'
@@ -463,13 +483,21 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
   
+  console.log(`[MESSAGE] Chat ${chatId}: "${text}"`);
+  
   // Ignore commands
-  if (!text || text.startsWith('/')) return;
+  if (!text || text.startsWith('/')) {
+    console.log(`  → Ignored (command or empty)`);
+    return;
+  }
   
   const session = getSession(chatId);
+  console.log(`  → Session state: wizardActive=${session.wizardActive}, currentStep=${session.currentStep}/${WIZARD_STEPS.length-1}`);
   
   // Check if waiting for prompt in wizard
   if (session.wizardActive && WIZARD_STEPS[session.currentStep] === 'prompt') {
+    console.log(`  → Wizard prompt detected! Generating...`);
+    
     // Generate with selections
     await generateImage(chatId, text);
     
@@ -481,7 +509,10 @@ bot.on('message', async (msg) => {
   
   // Direct prompt (no wizard active)
   if (!session.wizardActive) {
+    console.log(`  → Direct prompt (no wizard). Generating...`);
     await generateImage(chatId, text);
+  } else {
+    console.log(`  → Ignored (wizard active but not on prompt step)`);
   }
 });
 
