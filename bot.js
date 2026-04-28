@@ -38,7 +38,7 @@ const DEFAULT_CONFIG = {
   loras: [
     // { name: "yuki_lora", weight: 0.8 }  // Dein Character LoRA (ANPASSEN!)
   ],
-  default_prompt_prefix: ""  // Leer für Tests
+  default_prompt_prefix: "yukichar, 1girl, purple hair, cat ears"  // Leer für Tests
   // Später: "yukichar, 1girl, purple hair, cat ears"
 };
 
