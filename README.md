@@ -192,3 +192,92 @@ Der Bot loggt alle Generierungen:
 [2026-04-27T16:30:45.123Z] Generating: "a cat in space"
 [2026-04-27T16:30:52.456Z] ✅ Image sent to chat 123456789
 ```
+
+## 🌍 Multi-Language Support
+
+The bot supports **German** (Deutsch) and **Spanish** (Español)!
+
+### Switch Language
+
+**Start in German (default):**
+```
+/start
+```
+
+**Switch to Spanish:**
+```
+/español
+or
+/inicio
+```
+
+**Switch back to German:**
+```
+/deutsch
+```
+
+### Commands by Language
+
+**German:**
+- `/generate` - Start wizard
+- `/current` - Show current LoRAs
+- `/help` - Help
+- `/settings` - Settings
+
+**Spanish:**
+- `/generar` - Iniciar asistente
+- `/actual` - Mostrar LoRAs actuales
+- `/ayuda` - Ayuda
+- `/configuración` - Configuración
+
+### Auto-Detection
+
+The bot automatically remembers your language preference per user!
+
+**Example:**
+1. User A uses `/generar` → Bot switches to Spanish for User A
+2. User B uses `/generate` → Bot stays German for User B
+3. Each user sees the bot in their chosen language!
+
+---
+
+## 🇪🇸 Versión en Español
+
+El bot soporta **Alemán** y **Español**!
+
+### Cambiar Idioma
+
+**Comenzar en Español:**
+```
+/español
+o
+/inicio
+```
+
+**Cambiar a Alemán:**
+```
+/deutsch
+```
+
+### Comandos en Español
+
+- `/generar` - Iniciar asistente de generación
+- `/actual` - Mostrar LoRAs seleccionados
+- `/ayuda` - Ayuda
+- `/configuración` - Configuración
+- `/test <prompt>` - Prueba rápida sin LoRAs
+
+### Flujo de Trabajo en Español
+
+```
+1. /generar
+2. Elige Ropa (0-N) → Siguiente
+3. Elige Pose (0-N) → Siguiente  
+4. Elige Fondo (0-N) → Siguiente
+5. Elige Estilo (0-N) → Siguiente
+6. Envía tu prompt → ¡Imagen generada!
+```
+
+**Después de generar:**
+- 🔄 Nuevo Prompt (mantener LoRAs) - ¡Rápido!
+- 🆕 Nuevo Asistente (empezar de nuevo)
