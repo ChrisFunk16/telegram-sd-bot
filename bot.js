@@ -97,9 +97,17 @@ const LORA_CATEGORIES = {
   ],
   
   style: [
-    { name: 'anime_style', display: '🎌 Anime' },
-    { name: 'realistic_style', display: '📷 Realistic' },
-    { name: 'painting_style', display: '🎨 Painted' }
+    { name: 'ExpressiveHGothicNeonIncaseStyleMixV2ALLXLbyUOC (1)', display: '🌆 Gothic Neon' },
+    { name: 'PatchouliStyle_v6', display: '🎨 Patchouli' },
+    { name: '19thwomensa', display: '👗 19th Century' },
+    { name: 'Anime_Figure_P1', display: '🗿 Anime Figure' },
+    { name: 'Fine_Anime_Screencap-PonyV2', display: '📺 Anime Screencap' },
+    { name: 'MeMxXLV3_TypeB_AutismMix', display: '🎭 MeMx Autism' },
+    { name: 'DisneyStudios.style-10', display: '🏰 Disney Studios' },
+    { name: 'lazyup(1)', display: '✨ LazyUp v1' },
+    { name: 'arcane_pony_v2_exmix', display: '🔮 Arcane Style' },
+    { name: 'lazyup', display: '✨ LazyUp v2' },
+    { name: 'S1_Dramatic_Lighting_v3', display: '💡 Dramatic Light' }
   ]
 };
 
