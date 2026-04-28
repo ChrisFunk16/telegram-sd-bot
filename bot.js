@@ -51,10 +51,17 @@ const LORA_CATEGORIES = {
   ],
   
   pose: [
-    { name: 'sitting_pose', display: '🪑 Sitting' },
-    { name: 'standing_pose', display: '🧍 Standing' },
-    { name: 'lying_pose', display: '🛏️ Lying Down' },
-    { name: 'action_pose', display: '💃 Dynamic Action' }
+    { name: 'feet v2.1', display: '🦶 Feet Focus' },
+    { name: 'dio-brandes-pose-illustrious1-lora-nochelaiser', display: '🧍 Dio Brandes' },
+    { name: 'convenientcensoringinnetube_illust_v1', display: '🚫 Censoring Pose' },
+    { name: 'crossed arms_noobaI_V1.0', display: '✖️ Crossed Arms' },
+    { name: 'Cobra_pose', display: '🐍 Cobra Pose' },
+    { name: 'hand over own mouth_noobaI_V1.0', display: '🤭 Hand Over Mouth' },
+    { name: 'ironbend_illust_v1', display: '💪 Iron Bend' },
+    { name: 'skirt tug_illustrious_V2.0', display: '👗 Skirt Tug' },
+    { name: 'under covers - ll_v1.0', display: '🛏️ Under Covers' },
+    { name: 'labedon_illustrious', display: '😴 Laying Bed' },
+    { name: 'outstretched_legs_il_2_v2-final', display: '🦵 Outstretched Legs' }
   ],
   
   background: [
