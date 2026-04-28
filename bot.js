@@ -30,146 +30,202 @@ const DEFAULT_CONFIG = {
   default_prompt_prefix: "yukichar, 1girl, purple hair"  // Standard-Tags vor jedem Prompt
 };
 
-// Bot initialisieren
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+// ==================== LORA CATEGORIES ====================
 
-console.log('🤖 Telegram SD Bot gestartet!');
+const LORA_CATEGORIES = {
+  clothing: [
+    { name: 'asos-kokoboots-n', display: '👢 Boots' },
+    { name: 'bike_shorts_noobaI_V1.0', display: '🚴 Bike Shorts' },
+    { name: 'bra_peek_irl_goofy', display: '👙 Bra Peek' },
+    { name: 'cmo-fashion-illustriousxl-lora-nochekai', display: '👗 Fashion' },
+    { name: 'hotpants_noobaI_V1.0', display: '🩳 Hotpants' },
+    { name: 'JuicyTrackSuitILL', display: '🏃 Tracksuit' },
+    { name: 'jyojifuku_illustrious_V2.0', display: '👔 Jyojifuku' },
+    { name: 'oversized shirt_noobal_V1.0', display: '👕 Oversized Shirt' },
+    { name: 'PYGmalionWomanILL', display: '👗 Pygmalion' },
+    { name: 'SecretaryLingerieILL', display: '💼 Secretary' },
+    { name: 'taisouifuku_noobal_V1.0', display: '🤸 Gym Outfit' },
+    { name: 'thickblackhighlights_i1_v2', display: '✨ Highlights' },
+    { name: 'volleyball uniform', display: '🏐 Volleyball' },
+    { name: 'xlAEC_g102', display: '🎨 AEC Style' }
+  ],
+  
+  pose: [
+    { name: 'sitting_pose', display: '🪑 Sitting' },
+    { name: 'standing_pose', display: '🧍 Standing' },
+    { name: 'lying_pose', display: '🛏️ Lying Down' },
+    { name: 'action_pose', display: '💃 Dynamic Action' }
+  ],
+  
+  background: [
+    { name: 'city_bg', display: '🏙️ City' },
+    { name: 'nature_bg', display: '🌲 Nature' },
+    { name: 'bedroom_bg', display: '🛏️ Bedroom' },
+    { name: 'studio_bg', display: '📸 Studio' }
+  ],
+  
+  style: [
+    { name: 'anime_style', display: '🎌 Anime' },
+    { name: 'realistic_style', display: '📷 Realistic' },
+    { name: 'painting_style', display: '🎨 Painted' }
+  ]
+};
 
-// Clothing LoRAs
-const CLOTHING_LORAS = [
-  { name: 'asos-kokoboots-n', display: '👢 Boots' },
-  { name: 'bike_shorts_noobaI_V1.0', display: '🚴 Bike Shorts' },
-  { name: 'bra_peek_irl_goofy', display: '👙 Bra Peek' },
-  { name: 'cmo-fashion-illustriousxl-lora-nochekai', display: '👗 Fashion' },
-  { name: 'hotpants_noobaI_V1.0', display: '🩳 Hotpants' },
-  { name: 'JuicyTrackSuitILL', display: '🏃 Tracksuit' },
-  { name: 'jyojifuku_illustrious_V2.0', display: '👔 Jyojifuku' },
-  { name: 'oversized shirt_noobal_V1.0', display: '👕 Oversized Shirt' },
-  { name: 'PYGmalionWomanILL', display: '👗 Pygmalion' },
-  { name: 'SecretaryLingerieILL', display: '💼 Secretary' },
-  { name: 'taisouifuku_noobal_V1.0', display: '🤸 Gym Outfit' },
-  { name: 'thickblackhighlights_i1_v2', display: '✨ Highlights' },
-  { name: 'volleyball uniform', display: '🏐 Volleyball' },
-  { name: 'xlAEC_g102', display: '🎨 AEC Style' }
-];
+const WIZARD_STEPS = ['clothing', 'pose', 'background', 'style', 'prompt'];
 
-// Session state für User
+const STEP_TITLES = {
+  clothing: '👗 Wähle Clothing (0-N)',
+  pose: '💃 Wähle Pose (0-N)',
+  background: '🏞️ Wähle Background (0-N)',
+  style: '🎨 Wähle Style (0-N)',
+  prompt: '📝 Sende deinen Prompt'
+};
+
+// ==================== SESSION MANAGEMENT ====================
+
 const userSessions = {};
 
-// Helper: Get user session
 function getSession(chatId) {
   if (!userSessions[chatId]) {
     userSessions[chatId] = {
-      selectedClothing: [] // Array für mehrere Outfits
+      wizardActive: false,
+      currentStep: 0,
+      selections: {
+        clothing: [],
+        pose: [],
+        background: [],
+        style: []
+      }
     };
   }
   return userSessions[chatId];
 }
 
-// /start Command
-bot.onText(/\/start/, (msg) => {
-  const chatId = msg.chat.id;
-  
-  const clothingKeyboard = buildClothingMenu(chatId);
-  
-  bot.sendMessage(chatId, 
-    `🎨 *Yuki Image Generator*\n\n` +
-    `Wähle Outfits (mehrere möglich!) oder sende direkt einen Prompt!\n\n` +
-    `*Commands:*\n` +
-    `/clothing - Outfit-Menü öffnen\n` +
-    `/settings - Aktuelle Einstellungen\n` +
-    `/help - Hilfe anzeigen`,
-    { 
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: clothingKeyboard
-      }
-    }
-  );
-});
-
-// /help Command
-bot.onText(/\/help/, (msg) => {
-  const chatId = msg.chat.id;
-  bot.sendMessage(chatId,
-    `*Wie benutzt man den Bot:*\n\n` +
-    `1️⃣ Wähle Outfit mit /clothing\n` +
-    `2️⃣ Sende Prompt: \`sitting on a bench\`\n` +
-    `3️⃣ Oder direkt: \`walking in a forest\`\n\n` +
-    `*Einstellungen:*\n` +
-    `• Steps: ${DEFAULT_CONFIG.steps}\n` +
-    `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
-    `• Größe: ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}\n` +
-    `• Sampler: ${DEFAULT_CONFIG.sampler_name}\n` +
-    `• Default Prefix: ${DEFAULT_CONFIG.default_prompt_prefix || 'Keiner'}\n\n` +
-    `LoRAs und Negative Prompts sind voreingestellt. Nutze /settings für Details.`,
-    { parse_mode: 'Markdown' }
-  );
-});
-
-// Helper: Build clothing menu with checkmarks
-function buildClothingMenu(chatId) {
+function resetWizard(chatId) {
   const session = getSession(chatId);
-  const selected = session.selectedClothing || [];
+  session.wizardActive = false;
+  session.currentStep = 0;
+  session.selections = {
+    clothing: [],
+    pose: [],
+    background: [],
+    style: []
+  };
+}
+
+// ==================== MENU BUILDERS ====================
+
+function buildCategoryMenu(chatId, category) {
+  const session = getSession(chatId);
+  const items = LORA_CATEGORIES[category];
+  const selected = session.selections[category] || [];
   
-  const clothingKeyboard = [];
-  for (let i = 0; i < CLOTHING_LORAS.length; i += 2) {
+  const keyboard = [];
+  
+  // Items in 2-column grid
+  for (let i = 0; i < items.length; i += 2) {
     const isSelected1 = selected.includes(i);
     const checkmark1 = isSelected1 ? '✅ ' : '';
     
     const row = [
       { 
-        text: checkmark1 + CLOTHING_LORAS[i].display, 
-        callback_data: `cloth_${i}` 
+        text: checkmark1 + items[i].display, 
+        callback_data: `wiz_select_${category}_${i}` 
       }
     ];
     
-    if (i + 1 < CLOTHING_LORAS.length) {
+    if (i + 1 < items.length) {
       const isSelected2 = selected.includes(i + 1);
       const checkmark2 = isSelected2 ? '✅ ' : '';
       row.push({ 
-        text: checkmark2 + CLOTHING_LORAS[i + 1].display, 
-        callback_data: `cloth_${i + 1}` 
+        text: checkmark2 + items[i + 1].display, 
+        callback_data: `wiz_select_${category}_${i + 1}` 
       });
     }
     
-    clothingKeyboard.push(row);
+    keyboard.push(row);
   }
   
-  // Reset Button
-  clothingKeyboard.push([
-    { text: '🗑️ Alle abwählen', callback_data: 'cloth_reset' }
-  ]);
+  // Navigation buttons
+  const navRow = [];
   
-  return clothingKeyboard;
+  // Back button (if not first step)
+  if (session.currentStep > 0) {
+    navRow.push({ text: '◀️ Zurück', callback_data: 'wiz_back' });
+  }
+  
+  // Next/Skip button
+  navRow.push({ text: '▶️ Weiter', callback_data: 'wiz_next' });
+  
+  keyboard.push(navRow);
+  
+  // Reset button
+  if (selected.length > 0) {
+    keyboard.push([
+      { text: '🗑️ Auswahl löschen', callback_data: `wiz_reset_${category}` }
+    ]);
+  }
+  
+  return keyboard;
 }
 
-// /clothing Command
-bot.onText(/\/clothing/, (msg) => {
-  const chatId = msg.chat.id;
-  const session = getSession(chatId);
+function getSelectionSummary(session) {
+  let summary = '';
   
-  const clothingKeyboard = buildClothingMenu(chatId);
-  
-  // Aktuelles Outfit anzeigen
-  const selectedNames = session.selectedClothing.map(idx => CLOTHING_LORAS[idx].display);
-  const currentClothing = selectedNames.length > 0 ? selectedNames.join(', ') : 'Keine Auswahl';
-  
-  bot.sendMessage(chatId,
-    `👗 *Wähle Outfits für Yuki*\n\n` +
-    `✅ = Ausgewählt (mehrere möglich!)\n` +
-    `Aktuell: ${currentClothing}\n\n` +
-    `Klicke Outfits, dann sende Prompt!`,
-    {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: clothingKeyboard
-      }
+  for (const [category, indices] of Object.entries(session.selections)) {
+    if (indices.length > 0) {
+      const items = LORA_CATEGORIES[category];
+      const names = indices.map(idx => items[idx].display);
+      summary += `${category}: ${names.join(', ')}\n`;
     }
+  }
+  
+  return summary || 'Keine Auswahl';
+}
+
+// ==================== BOT SETUP ====================
+
+const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+
+console.log('🤖 Telegram SD Bot gestartet!');
+
+// ==================== COMMANDS ====================
+
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, 
+    `🎨 *Yuki Image Generator*\n\n` +
+    `Nutze /generate um Schritt für Schritt ein Bild zu erstellen!\n\n` +
+    `*Commands:*\n` +
+    `/generate - Wizard starten\n` +
+    `/settings - Aktuelle Einstellungen\n` +
+    `/help - Hilfe anzeigen`,
+    { parse_mode: 'Markdown' }
   );
 });
 
-// /settings Command
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId,
+    `*Workflow:*\n\n` +
+    `1️⃣ /generate - Wizard starten\n` +
+    `2️⃣ Wähle Clothing (0-N)\n` +
+    `3️⃣ Wähle Pose (0-N)\n` +
+    `4️⃣ Wähle Background (0-N)\n` +
+    `5️⃣ Wähle Style (0-N)\n` +
+    `6️⃣ Sende Prompt → Bild generiert!\n\n` +
+    `✅ = Ausgewählt (mehrere pro Kategorie möglich)\n` +
+    `▶️ Weiter = Skip zur nächsten Kategorie\n` +
+    `◀️ Zurück = Vorherige Kategorie\n\n` +
+    `*Einstellungen:*\n` +
+    `• Steps: ${DEFAULT_CONFIG.steps}\n` +
+    `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
+    `• Größe: ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}\n` +
+    `• Sampler: ${DEFAULT_CONFIG.sampler_name}`,
+    { parse_mode: 'Markdown' }
+  );
+});
+
 bot.onText(/\/settings/, (msg) => {
   const chatId = msg.chat.id;
   
@@ -188,22 +244,70 @@ bot.onText(/\/settings/, (msg) => {
     `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
     `• Auflösung: ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}\n` +
     `• Sampler: ${DEFAULT_CONFIG.sampler_name}\n` +
-    `• LoRAs: ${loraText}\n` +
+    `• Character LoRA: ${loraText}\n` +
     `• Default Prefix: ${prefixText}\n` +
     `• Negative Prompt: ${DEFAULT_CONFIG.negative_prompt}\n` +
     `• Seed: ${DEFAULT_CONFIG.seed === -1 ? 'Random' : DEFAULT_CONFIG.seed}`
   );
 });
 
-// /generate <prompt> Command
-bot.onText(/\/generate (.+)/, async (msg, match) => {
+// ==================== WIZARD START ====================
+
+bot.onText(/\/generate/, (msg) => {
   const chatId = msg.chat.id;
-  const prompt = match[1];
+  const session = getSession(chatId);
   
-  await generateImage(chatId, prompt);
+  // Reset and start wizard
+  resetWizard(chatId);
+  session.wizardActive = true;
+  session.currentStep = 0;
+  
+  showWizardStep(chatId);
 });
 
-// Callback Query Handler (Button Clicks)
+function showWizardStep(chatId) {
+  const session = getSession(chatId);
+  const stepName = WIZARD_STEPS[session.currentStep];
+  
+  // Final step: Prompt input
+  if (stepName === 'prompt') {
+    const summary = getSelectionSummary(session);
+    
+    bot.sendMessage(chatId,
+      `📝 *Schritt 5/5: Prompt*\n\n` +
+      `Deine Auswahl:\n${summary}\n\n` +
+      `Sende jetzt deinen Prompt!\n` +
+      `(z.B. "sitting on a bench, sunset, smiling")`,
+      { parse_mode: 'Markdown' }
+    );
+    return;
+  }
+  
+  // Show category selection
+  const keyboard = buildCategoryMenu(chatId, stepName);
+  const stepNumber = session.currentStep + 1;
+  const totalSteps = WIZARD_STEPS.length;
+  
+  const selected = session.selections[stepName] || [];
+  const items = LORA_CATEGORIES[stepName];
+  const selectedNames = selected.map(idx => items[idx].display);
+  const selectionText = selectedNames.length > 0 ? selectedNames.join(', ') : 'Keine';
+  
+  bot.sendMessage(chatId,
+    `${STEP_TITLES[stepName]}\n\n` +
+    `Schritt ${stepNumber}/${totalSteps}\n` +
+    `✅ = Ausgewählt | ▶️ Weiter = Skip\n\n` +
+    `Aktuell: ${selectionText}`,
+    {
+      reply_markup: {
+        inline_keyboard: keyboard
+      }
+    }
+  );
+}
+
+// ==================== CALLBACK HANDLERS ====================
+
 bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
   const messageId = query.message.message_id;
@@ -211,100 +315,183 @@ bot.on('callback_query', async (query) => {
   
   const session = getSession(chatId);
   
-  // Reset Selection
-  if (data === 'cloth_reset') {
-    session.selectedClothing = [];
+  if (!session.wizardActive) {
+    await bot.answerCallbackQuery(query.id, {
+      text: '⚠️ Kein aktiver Wizard! Nutze /generate'
+    });
+    return;
+  }
+  
+  const stepName = WIZARD_STEPS[session.currentStep];
+  
+  // ===== NAVIGATION =====
+  
+  if (data === 'wiz_next') {
+    // Move to next step
+    session.currentStep++;
     
     await bot.answerCallbackQuery(query.id, {
-      text: '🗑️ Alle abgewählt!'
+      text: '▶️ Weiter'
     });
     
-    // Update Menu
-    const clothingKeyboard = buildClothingMenu(chatId);
+    await bot.deleteMessage(chatId, messageId);
+    showWizardStep(chatId);
+    return;
+  }
+  
+  if (data === 'wiz_back') {
+    // Move to previous step
+    session.currentStep--;
+    
+    await bot.answerCallbackQuery(query.id, {
+      text: '◀️ Zurück'
+    });
+    
+    await bot.deleteMessage(chatId, messageId);
+    showWizardStep(chatId);
+    return;
+  }
+  
+  // ===== RESET CATEGORY =====
+  
+  if (data.startsWith('wiz_reset_')) {
+    const category = data.replace('wiz_reset_', '');
+    session.selections[category] = [];
+    
+    await bot.answerCallbackQuery(query.id, {
+      text: '🗑️ Auswahl gelöscht'
+    });
+    
+    const keyboard = buildCategoryMenu(chatId, category);
     await bot.editMessageReplyMarkup(
-      { inline_keyboard: clothingKeyboard },
+      { inline_keyboard: keyboard },
       { chat_id: chatId, message_id: messageId }
+    );
+    
+    // Update text
+    const stepNumber = session.currentStep + 1;
+    const totalSteps = WIZARD_STEPS.length;
+    
+    await bot.editMessageText(
+      `${STEP_TITLES[category]}\n\n` +
+      `Schritt ${stepNumber}/${totalSteps}\n` +
+      `✅ = Ausgewählt | ▶️ Weiter = Skip\n\n` +
+      `Aktuell: Keine`,
+      {
+        chat_id: chatId,
+        message_id: messageId,
+        reply_markup: {
+          inline_keyboard: keyboard
+        }
+      }
     );
     
     return;
   }
   
-  // Clothing Toggle
-  if (data.startsWith('cloth_')) {
-    const index = parseInt(data.replace('cloth_', ''));
-    const selectedClothing = CLOTHING_LORAS[index];
+  // ===== ITEM SELECTION TOGGLE =====
+  
+  if (data.startsWith('wiz_select_')) {
+    const parts = data.replace('wiz_select_', '').split('_');
+    const category = parts[0];
+    const index = parseInt(parts[1]);
+    
+    const items = LORA_CATEGORIES[category];
+    const item = items[index];
     
     // Toggle selection
-    const currentSelected = session.selectedClothing || [];
+    const currentSelected = session.selections[category] || [];
     const indexPos = currentSelected.indexOf(index);
     
     if (indexPos > -1) {
-      // Already selected → Remove
+      // Remove
       currentSelected.splice(indexPos, 1);
       await bot.answerCallbackQuery(query.id, {
-        text: `❌ ${selectedClothing.display} abgewählt`
+        text: `❌ ${item.display} abgewählt`
       });
     } else {
-      // Not selected → Add
+      // Add
       currentSelected.push(index);
       await bot.answerCallbackQuery(query.id, {
-        text: `✅ ${selectedClothing.display} hinzugefügt!`
+        text: `✅ ${item.display}`
       });
     }
     
-    session.selectedClothing = currentSelected;
+    session.selections[category] = currentSelected;
     
-    // Update Menu mit neuen Checkmarks
-    const clothingKeyboard = buildClothingMenu(chatId);
+    // Update menu
+    const keyboard = buildCategoryMenu(chatId, category);
     await bot.editMessageReplyMarkup(
-      { inline_keyboard: clothingKeyboard },
+      { inline_keyboard: keyboard },
       { chat_id: chatId, message_id: messageId }
     );
     
-    // Update Text mit aktueller Auswahl
-    const selectedNames = currentSelected.map(idx => CLOTHING_LORAS[idx].display);
-    const currentClothingText = selectedNames.length > 0 ? selectedNames.join(', ') : 'Keine Auswahl';
+    // Update text
+    const stepNumber = session.currentStep + 1;
+    const totalSteps = WIZARD_STEPS.length;
+    const selectedNames = currentSelected.map(idx => items[idx].display);
+    const selectionText = selectedNames.length > 0 ? selectedNames.join(', ') : 'Keine';
     
     await bot.editMessageText(
-      `👗 *Wähle Outfits für Yuki*\n\n` +
-      `✅ = Ausgewählt (mehrere möglich!)\n` +
-      `Aktuell: ${currentClothingText}\n\n` +
-      `Klicke Outfits, dann sende Prompt!`,
+      `${STEP_TITLES[category]}\n\n` +
+      `Schritt ${stepNumber}/${totalSteps}\n` +
+      `✅ = Ausgewählt | ▶️ Weiter = Skip\n\n` +
+      `Aktuell: ${selectionText}`,
       {
         chat_id: chatId,
         message_id: messageId,
-        parse_mode: 'Markdown',
         reply_markup: {
-          inline_keyboard: clothingKeyboard
+          inline_keyboard: keyboard
         }
       }
     );
+    
+    return;
   }
 });
 
-// Direkte Text-Nachrichten als Prompts behandeln
+// ==================== PROMPT HANDLER ====================
+
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
   
-  // Ignoriere Commands
+  // Ignore commands
   if (!text || text.startsWith('/')) return;
   
-  await generateImage(chatId, text);
+  const session = getSession(chatId);
+  
+  // Check if waiting for prompt in wizard
+  if (session.wizardActive && WIZARD_STEPS[session.currentStep] === 'prompt') {
+    // Generate with selections
+    await generateImage(chatId, text);
+    
+    // Reset wizard
+    resetWizard(chatId);
+    
+    return;
+  }
+  
+  // Direct prompt (no wizard active)
+  if (!session.wizardActive) {
+    await generateImage(chatId, text);
+  }
 });
 
-// Hauptfunktion: Bild generieren
+// ==================== IMAGE GENERATION ====================
+
 async function generateImage(chatId, prompt) {
   try {
-    // Status-Nachricht
     const statusMsg = await bot.sendMessage(chatId, '🎨 Generiere Bild...');
     
     console.log(`[${new Date().toISOString()}] User prompt: "${prompt}"`);
     
-    // Build full prompt: LoRAs + Default Prefix + User Prompt
+    const session = getSession(chatId);
+    
+    // Build full prompt with all LoRAs
     let fullPrompt = '';
     
-    // 1. Character LoRAs hinzufügen (immer)
+    // 1. Character LoRAs (always)
     if (DEFAULT_CONFIG.loras && DEFAULT_CONFIG.loras.length > 0) {
       const loraStrings = DEFAULT_CONFIG.loras.map(lora => 
         `<lora:${lora.name}:${lora.weight}>`
@@ -312,27 +499,29 @@ async function generateImage(chatId, prompt) {
       fullPrompt += loraStrings.join(' ') + ' ';
     }
     
-    // 2. Clothing LoRAs hinzufügen (falls gewählt, mehrere möglich!)
-    const session = getSession(chatId);
-    if (session.selectedClothing && session.selectedClothing.length > 0) {
-      const clothingLoraStrings = session.selectedClothing.map(idx => {
-        const lora = CLOTHING_LORAS[idx];
-        return `<lora:${lora.name}:0.7>`;
-      });
-      fullPrompt += clothingLoraStrings.join(' ') + ' ';
+    // 2. Add selected LoRAs from wizard
+    for (const [category, indices] of Object.entries(session.selections)) {
+      if (indices.length > 0) {
+        const items = LORA_CATEGORIES[category];
+        const loraStrings = indices.map(idx => {
+          const item = items[idx];
+          return `<lora:${item.name}:0.7>`;
+        });
+        fullPrompt += loraStrings.join(' ') + ' ';
+      }
     }
     
-    // 3. Default Prefix hinzufügen
+    // 3. Default prefix
     if (DEFAULT_CONFIG.default_prompt_prefix) {
       fullPrompt += DEFAULT_CONFIG.default_prompt_prefix + ', ';
     }
     
-    // 4. User Prompt hinzufügen
+    // 4. User prompt
     fullPrompt += prompt;
     
     console.log(`[${new Date().toISOString()}] Full prompt: "${fullPrompt}"`);
     
-    // API Request an Automatic1111
+    // API Request
     const payload = {
       prompt: fullPrompt,
       negative_prompt: DEFAULT_CONFIG.negative_prompt,
@@ -343,7 +532,6 @@ async function generateImage(chatId, prompt) {
       sampler_name: DEFAULT_CONFIG.sampler_name,
       seed: DEFAULT_CONFIG.seed,
       
-      // Model & VAE Override
       override_settings: {
         sd_model_checkpoint: DEFAULT_CONFIG.checkpoint,
         sd_vae: DEFAULT_CONFIG.vae
@@ -354,34 +542,28 @@ async function generateImage(chatId, prompt) {
     const response = await axios.post(
       `${A1111_URL}/sdapi/v1/txt2img`,
       payload,
-      { timeout: 120000 } // 2 Minuten Timeout
+      { timeout: 120000 }
     );
     
-    // Bild aus Response holen (Base64)
     const imageBase64 = response.data.images[0];
     const imageBuffer = Buffer.from(imageBase64, 'base64');
     
-    // Status-Nachricht löschen
     await bot.deleteMessage(chatId, statusMsg.message_id);
     
-    // Caption mit LoRA-Info (ohne Markdown wegen <> in LoRA-Syntax)
-    let caption = `🎨 Prompt: ${prompt}\n\n`;
+    // Build caption
+    let caption = `🎨 ${prompt}\n\n`;
     
-    // Character LoRA Info
-    if (DEFAULT_CONFIG.loras && DEFAULT_CONFIG.loras.length > 0) {
-      const loraInfo = DEFAULT_CONFIG.loras.map(l => `${l.name} (${l.weight})`).join(', ');
-      caption += `Character: ${loraInfo}\n`;
+    // Show selected LoRAs
+    for (const [category, indices] of Object.entries(session.selections)) {
+      if (indices.length > 0) {
+        const items = LORA_CATEGORIES[category];
+        const names = indices.map(idx => items[idx].display);
+        caption += `${category}: ${names.join(', ')}\n`;
+      }
     }
     
-    // Clothing LoRAs Info
-    if (session.selectedClothing && session.selectedClothing.length > 0) {
-      const clothingNames = session.selectedClothing.map(idx => CLOTHING_LORAS[idx].display);
-      caption += `Outfits: ${clothingNames.join(', ')}\n`;
-    }
+    caption += `\n${DEFAULT_CONFIG.steps} steps | CFG ${DEFAULT_CONFIG.cfg_scale} | ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}`;
     
-    caption += `\nSteps: ${DEFAULT_CONFIG.steps} | CFG: ${DEFAULT_CONFIG.cfg_scale} | ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}`;
-    
-    // Bild senden (ohne parse_mode wegen LoRA <> Zeichen)
     await bot.sendPhoto(chatId, imageBuffer, {
       caption: caption
     });
@@ -391,7 +573,6 @@ async function generateImage(chatId, prompt) {
   } catch (error) {
     console.error('Error generating image:', error.message);
     
-    // Fehler-Nachricht
     let errorMsg = '❌ Fehler beim Generieren:\n\n';
     
     if (error.code === 'ECONNREFUSED') {
@@ -408,12 +589,12 @@ async function generateImage(chatId, prompt) {
   }
 }
 
-// Error Handler
+// ==================== ERROR HANDLERS ====================
+
 bot.on('polling_error', (error) => {
   console.error('Polling error:', error.message);
 });
 
-// Graceful Shutdown
 process.on('SIGINT', () => {
   console.log('\n👋 Bot wird beendet...');
   bot.stopPolling();
