@@ -74,10 +74,26 @@ const LORA_CATEGORIES = {
   ],
   
   background: [
-    { name: 'city_bg', display: '🏙️ City' },
-    { name: 'nature_bg', display: '🌲 Nature' },
-    { name: 'bedroom_bg', display: '🛏️ Bedroom' },
-    { name: 'studio_bg', display: '📸 Studio' }
+    { name: 'M4DSCIENCE3-PONYXL', display: '🔬 Mad Science Lab' },
+    { name: 'large_industrial_stud10-p', display: '🏭 Industrial Studio' },
+    { name: 'medieval_castle_prison_c3ll-p', display: '🏰 Castle Prison' },
+    { name: 'high_school_h4llw4y-p', display: '🏫 School Hallway' },
+    { name: 'baroque_gothic_ch4mb3r-p', display: '⛪ Gothic Chamber' },
+    { name: 'dirty_public_r3str00m-p', display: '🚻 Public Restroom' },
+    { name: 'Ayuri2424PDXL32v0.50[fa1-000009', display: '🎨 Ayuri Style' },
+    { name: 'landscape_PONY', display: '🌄 Landscape' },
+    { name: 'futuristic_high-tech_l4b0r4t0ry-p', display: '🔭 Futuristic Lab' },
+    { name: 'traditional_Japanese_d0j0-p', display: '🏯 Japanese Dojo' },
+    { name: 'glass_containment_ch4mb3r-p', display: '🧪 Glass Chamber' },
+    { name: 'medical_examination_r00m-p', display: '🏥 Medical Room' },
+    { name: 'SW01v1-5pb', display: '⭐ Star Wars 1' },
+    { name: 'SW_Planets_01pony', display: '🌌 Star Wars Planets' },
+    { name: 'girlikeconvexmirror_pony', display: '🪞 Convex Mirror' },
+    { name: 'cyberpunk_r00fb0p-p', display: '🌃 Cyberpunk Rooftop' },
+    { name: 'CWLost_city2pony', display: '🏛️ Lost City' },
+    { name: 'bedroom_0f_4_succubus-p', display: '😈 Succubus Bedroom' },
+    { name: 'prison_w4ll-p', display: '⛓️ Prison Wall' },
+    { name: 'futuristic_b3dr00m-p', display: '🛸 Futuristic Bedroom' }
   ],
   
   style: [
