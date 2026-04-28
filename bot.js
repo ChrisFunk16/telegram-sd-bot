@@ -13,22 +13,30 @@ const A1111_URL = process.env.A1111_URL || 'http://127.0.0.1:7860';
 const DEFAULT_CONFIG = {
   steps: 30,
   cfg_scale: 7,
-  width: 512,
-  height: 640,
+  width: 832,   // XL Models brauchen höhere Auflösung (min 1024 in einer Dimension)
+  height: 1216, // Portrait format für Characters
   sampler_name: "DPM++ 2M Karras",
+  
+  // Für SD 1.5 Models (AOM3, Counterfeit) → width: 512, height: 640
   negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
   seed: -1,  // Random seed
   
   // Model Settings (WICHTIG: Name MUSS EXAKT mit A1111 Model-Liste übereinstimmen!)
-  // Checke mit: http://127.0.0.1:7860/sdapi/v1/sd-models
-  checkpoint: "noobaiXLNAIXL_epsilonPred05.safetensors",  // NoobAI XL (anpassen falls anders!)
-  vae: "sdxl_vae.safetensors",  // Standard SDXL VAE
+  // Aktuell: AOM3 | Später: novaAnimeXL
+  checkpoint: "novaAnimeXL_illV180.safetensors",  // NovaAnime XL (Illustrious-based)
+  vae: "sdxl_vae.safetensors",  // Standard SDXL VAE (für XL Models)
   
-  // LoRA + Default Prefix
+  // Alternative Models (zum Wechseln via /setmodel):
+  // "AOM3.safetensors" (SD 1.5 - braucht anderen VAE!)
+  // "counterfeitV30_v30.safetensors"
+  // "realisticVisionV51_v51VAE.safetensors"
+  
+  // Character LoRA + Default Prefix
+  // WICHTIG: LoRA-Name muss EXAKT dem Dateinamen in models/Lora/ entsprechen (ohne .safetensors)
   loras: [
-    { name: "yuki_lora", weight: 0.7 }  // LoRA Name + Stärke (0.0-1.0)
+    { name: "yuki_lora", weight: 0.8 }  // Dein Character LoRA (anpassen!)
   ],
-  default_prompt_prefix: "yukichar, 1girl, purple hair"  // Standard-Tags vor jedem Prompt
+  default_prompt_prefix: "yukichar, 1girl, purple hair, cat ears"  // Standard-Tags vor jedem Prompt
 };
 
 // ==================== LORA CATEGORIES ====================
@@ -227,6 +235,8 @@ bot.onText(/\/help/, (msg) => {
     `◀️ Zurück = Vorherige Kategorie\n\n` +
     `*Commands:*\n` +
     `/settings - Einstellungen anzeigen\n` +
+    `/nova - Quick: NovaAnime XL\n` +
+    `/aom3 - Quick: AOM3\n` +
     `/setmodel <name> - Model wechseln\n` +
     `/setvae <name> - VAE wechseln\n` +
     `/debug - Debug Info\n\n` +
@@ -259,7 +269,24 @@ bot.onText(/\/setmodel (.+)/, async (msg, match) => {
   
   DEFAULT_CONFIG.checkpoint = modelName;
   
-  bot.sendMessage(chatId, `✅ Model gesetzt: ${modelName}\n\nWird bei der nächsten Generierung geladen!`);
+  let hint = '';
+  
+  // Auto-detect VAE based on model type
+  if (modelName.toLowerCase().includes('xl') || modelName.toLowerCase().includes('nova') || modelName.toLowerCase().includes('pony')) {
+    // XL Model → XL VAE
+    DEFAULT_CONFIG.vae = 'sdxl_vae.safetensors';
+    DEFAULT_CONFIG.width = 832;
+    DEFAULT_CONFIG.height = 1216;
+    hint = '\n\n📐 Auto: XL VAE + 832x1216 gesetzt';
+  } else {
+    // SD 1.5 Model → SD 1.5 VAE
+    DEFAULT_CONFIG.vae = 'vae-ft-mse-840000-ema-pruned.safetensors';
+    DEFAULT_CONFIG.width = 512;
+    DEFAULT_CONFIG.height = 640;
+    hint = '\n\n📐 Auto: SD 1.5 VAE + 512x640 gesetzt';
+  }
+  
+  bot.sendMessage(chatId, `✅ Model gesetzt: ${modelName}${hint}\n\nWird bei der nächsten Generierung geladen!`);
 });
 
 bot.onText(/\/setvae (.+)/, async (msg, match) => {
@@ -269,6 +296,25 @@ bot.onText(/\/setvae (.+)/, async (msg, match) => {
   DEFAULT_CONFIG.vae = vaeName;
   
   bot.sendMessage(chatId, `✅ VAE gesetzt: ${vaeName}\n\nWird bei der nächsten Generierung geladen!`);
+});
+
+// Quick switches für häufige Models
+bot.onText(/\/nova/, (msg) => {
+  const chatId = msg.chat.id;
+  DEFAULT_CONFIG.checkpoint = 'novaAnimeXL_illV180.safetensors';
+  DEFAULT_CONFIG.vae = 'sdxl_vae.safetensors';
+  DEFAULT_CONFIG.width = 832;
+  DEFAULT_CONFIG.height = 1216;
+  bot.sendMessage(chatId, '✅ Switched to NovaAnime XL (832x1216)');
+});
+
+bot.onText(/\/aom3/, (msg) => {
+  const chatId = msg.chat.id;
+  DEFAULT_CONFIG.checkpoint = 'AOM3.safetensors';
+  DEFAULT_CONFIG.vae = 'vae-ft-mse-840000-ema-pruned.safetensors';
+  DEFAULT_CONFIG.width = 512;
+  DEFAULT_CONFIG.height = 640;
+  bot.sendMessage(chatId, '✅ Switched to AOM3 (512x640)');
 });
 
 bot.onText(/\/settings/, (msg) => {
