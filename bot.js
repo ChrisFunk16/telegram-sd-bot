@@ -19,7 +19,7 @@ const DEFAULT_CONFIG = {
   
   // Für XL Models normalerweise: width: 832, height: 1216
   // Für SD 1.5 Models: width: 512, height: 640
-  negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
+  negative_prompt: "low quality, blurry, deformed, extra limbs, bad anatomy, realistic, 3d,",
   seed: -1,  // Random seed
   
   // Model Settings (WICHTIG: Name MUSS EXAKT mit A1111 Model-Liste übereinstimmen!)
