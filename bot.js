@@ -791,7 +791,7 @@ bot.on('callback_query', async (query) => {
     // Update text
     const stepNumber = session.currentStep + 1;
     const totalSteps = WIZARD_STEPS.length;
-    const lang = session.language || 'de';
+    // lang already declared above, reuse it
     
     const selectedLabel = lang === 'es' ? 'Seleccionado' : 'Ausgewählt';
     const skipLabel = lang === 'es' ? 'Saltar' : 'Skip';
