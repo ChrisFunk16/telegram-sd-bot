@@ -277,12 +277,26 @@ bot.onText(/\/debug/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
   
+  // Count selected LoRAs
+  let totalLoras = 0;
+  let loraDetails = '';
+  
+  for (const [category, indices] of Object.entries(session.selections)) {
+    if (indices.length > 0) {
+      totalLoras += indices.length;
+      const items = LORA_CATEGORIES[category];
+      const names = indices.map(idx => items[idx].name);
+      loraDetails += `${category}: ${names.join(', ')}\n`;
+    }
+  }
+  
   bot.sendMessage(chatId,
     `🐛 *Debug Info*\n\n` +
     `wizardActive: ${session.wizardActive}\n` +
     `currentStep: ${session.currentStep}\n` +
-    `stepName: ${WIZARD_STEPS[session.currentStep]}\n` +
-    `selections: ${JSON.stringify(session.selections, null, 2)}`,
+    `stepName: ${WIZARD_STEPS[session.currentStep]}\n\n` +
+    `Selected LoRAs: ${totalLoras}\n\n` +
+    `${loraDetails || 'Keine LoRAs ausgewählt'}`,
     { parse_mode: 'Markdown' }
   );
 });
@@ -677,6 +691,10 @@ async function generateImage(chatId, prompt) {
     
     console.log(`[${new Date().toISOString()}] Full prompt: "${fullPrompt}"`);
     
+    // Count LoRAs
+    const loraCount = (fullPrompt.match(/<lora:/g) || []).length;
+    console.log(`[${new Date().toISOString()}] Total LoRAs in prompt: ${loraCount}`);
+    
     // API Request
     const payload = {
       prompt: fullPrompt,
@@ -695,7 +713,7 @@ async function generateImage(chatId, prompt) {
     const response = await axios.post(
       `${A1111_URL}/sdapi/v1/txt2img`,
       payload,
-      { timeout: 120000 }
+      { timeout: 300000 } // 5 Minuten (viele LoRAs brauchen Zeit!)
     );
     
     const imageBase64 = response.data.images[0];
@@ -725,12 +743,26 @@ async function generateImage(chatId, prompt) {
     
   } catch (error) {
     console.error('Error generating image:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Full error:', error);
     
     let errorMsg = '❌ Fehler beim Generieren:\n\n';
     
     if (error.code === 'ECONNREFUSED') {
       errorMsg += '🔴 Automatic1111 ist nicht erreichbar!\n';
       errorMsg += `Stelle sicher, dass A1111 auf ${A1111_URL} läuft.`;
+    } else if (error.code === 'ECONNRESET') {
+      errorMsg += '⚠️ Verbindung zu A1111 abgebrochen!\n\n';
+      errorMsg += 'Mögliche Ursachen:\n';
+      errorMsg += '• Zu viele LoRAs → Reduziere Auswahl\n';
+      errorMsg += '• A1111 crashed → Check A1111 Console\n';
+      errorMsg += '• LoRA nicht gefunden → Check Namen\n';
+      errorMsg += '• VRAM voll → Niedrigere Auflösung';
+    } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
+      errorMsg += '⏱️ Timeout nach 5 Minuten!\n\n';
+      errorMsg += 'Generierung dauert zu lange.\n';
+      errorMsg += '• Wähle weniger LoRAs\n';
+      errorMsg += '• Reduziere Steps (aktuell: ' + DEFAULT_CONFIG.steps + ')';
     } else if (error.response) {
       errorMsg += `Server Error: ${error.response.status}\n`;
       errorMsg += error.response.data?.error || 'Unbekannter Fehler';
