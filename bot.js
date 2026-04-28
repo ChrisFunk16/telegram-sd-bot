@@ -262,11 +262,14 @@ bot.onText(/\/help/, (msg) => {
     `▶️ Weiter = Skip zur nächsten Kategorie\n` +
     `◀️ Zurück = Vorherige Kategorie\n\n` +
     `*Commands:*\n` +
+    `/current - Aktuell gewählte LoRAs\n` +
     `/test <prompt> - Quick test ohne LoRAs\n` +
     `/checkmodel - Welches Model ist geladen?\n` +
     `/settings - Alle Einstellungen\n` +
     `/debug - Debug Info\n\n` +
-    `*Tipp:* Model in A1111 GUI wählen, Bot nutzt es automatisch!`,
+    `*Workflow-Tipp:*\n` +
+    `Nach Generierung → "🔄 Neuer Prompt" für gleiche LoRAs!\n` +
+    `Spart Zeit beim Experimentieren mit Prompts.`,
     { parse_mode: 'Markdown' }
   );
 });
@@ -292,6 +295,37 @@ bot.onText(/\/checkmodel/, async (msg) => {
   } catch (err) {
     bot.sendMessage(chatId, `❌ A1111 nicht erreichbar: ${err.message}`);
   }
+});
+
+bot.onText(/\/current/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  
+  const summary = getSelectionSummary(session);
+  
+  // Count total LoRAs
+  let totalLoras = 0;
+  for (const indices of Object.values(session.selections)) {
+    totalLoras += indices.length;
+  }
+  
+  if (totalLoras === 0) {
+    bot.sendMessage(chatId, 
+      '📋 *Aktuelle Auswahl*\n\n' +
+      'Keine LoRAs ausgewählt.\n\n' +
+      'Nutze /generate um zu starten!',
+      { parse_mode: 'Markdown' }
+    );
+    return;
+  }
+  
+  bot.sendMessage(chatId,
+    `📋 *Aktuelle LoRA-Auswahl*\n\n` +
+    `${summary}\n\n` +
+    `Total: ${totalLoras} LoRAs\n\n` +
+    `Sende einen Prompt oder nutze /generate für neue Auswahl!`,
+    { parse_mode: 'Markdown' }
+  );
 });
 
 bot.onText(/\/debug/, (msg) => {
@@ -515,6 +549,49 @@ bot.on('callback_query', async (query) => {
   
   const session = getSession(chatId);
   
+  // ===== CONTINUE OPTIONS (after generation) =====
+  
+  if (data === 'continue_same') {
+    // Keep selections, go back to prompt step
+    session.wizardActive = true;
+    session.currentStep = 4;  // Step 4 = prompt
+    
+    const summary = getSelectionSummary(session);
+    
+    await bot.answerCallbackQuery(query.id, {
+      text: '🔄 LoRAs behalten!'
+    });
+    
+    await bot.deleteMessage(chatId, messageId);
+    
+    // Show prompt step with current selections
+    await bot.sendMessage(chatId,
+      `📝 *Neuer Prompt mit gleichen LoRAs*\n\n` +
+      `Aktuelle Auswahl:\n${summary}\n\n` +
+      `Sende jetzt deinen neuen Prompt!`,
+      { parse_mode: 'Markdown' }
+    );
+    
+    return;
+  }
+  
+  if (data === 'continue_new') {
+    // Reset everything, start fresh
+    resetWizard(chatId);
+    session.wizardActive = true;
+    session.currentStep = 0;
+    
+    await bot.answerCallbackQuery(query.id, {
+      text: '🆕 Wizard neu gestartet!'
+    });
+    
+    await bot.deleteMessage(chatId, messageId);
+    showWizardStep(chatId);
+    return;
+  }
+  
+  // ===== WIZARD NAVIGATION =====
+  
   if (!session.wizardActive) {
     await bot.answerCallbackQuery(query.id, {
       text: '⚠️ Kein aktiver Wizard! Nutze /generate'
@@ -676,8 +753,9 @@ bot.on('message', async (msg) => {
     // Generate with selections
     await generateImage(chatId, text);
     
-    // Reset wizard
-    resetWizard(chatId);
+    // DON'T reset wizard - user can continue with same settings!
+    // Reset happens only when user clicks "Neuer Wizard" or starts /generate
+    session.wizardActive = false;  // Mark as inactive but keep selections
     
     return;
   }
@@ -685,6 +763,20 @@ bot.on('message', async (msg) => {
   // Direct prompt (no wizard active)
   if (!session.wizardActive) {
     console.log(`  → Direct prompt (no wizard). Generating...`);
+    
+    // Check if user has previous selections
+    let hasPreviousSelections = false;
+    for (const indices of Object.values(session.selections)) {
+      if (indices.length > 0) {
+        hasPreviousSelections = true;
+        break;
+      }
+    }
+    
+    if (hasPreviousSelections) {
+      console.log(`  → Using previous LoRA selections!`);
+    }
+    
     await generateImage(chatId, text);
   } else {
     console.log(`  → Ignored (wizard active but not on prompt step)`);
@@ -818,6 +910,25 @@ async function generateImage(chatId, prompt) {
     });
     
     console.log(`[${new Date().toISOString()}] ✅ Image sent to chat ${chatId}`);
+    
+    // Offer to continue with same settings or restart
+    const continueKeyboard = [
+      [
+        { text: '🔄 Neuer Prompt (gleiche LoRAs)', callback_data: 'continue_same' },
+        { text: '🆕 Neuer Wizard', callback_data: 'continue_new' }
+      ]
+    ];
+    
+    await bot.sendMessage(chatId,
+      '✨ Was als Nächstes?\n\n' +
+      '🔄 = Gleiche LoRAs behalten, nur neuen Prompt\n' +
+      '🆕 = Wizard neu starten',
+      {
+        reply_markup: {
+          inline_keyboard: continueKeyboard
+        }
+      }
+    );
     
   } catch (error) {
     console.error('Error generating image:', error.message);
