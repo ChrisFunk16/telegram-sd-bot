@@ -134,6 +134,44 @@ const STEP_TITLES = {
   }
 };
 
+// Example Prompts
+const EXAMPLE_PROMPTS = {
+  de: [
+    { title: '🎮 Gaming Original', prompt: 'cat ear hoodie, dark green hoodie, school uniform, white shirt, red ribbon bow, holding game controller, sitting, gaming pose, shy expression, blush, simple background' },
+    { title: '👕 Casual Draußen', prompt: 'oversized t-shirt, denim shorts, standing, hands in pockets, relaxed expression, slight smile, park background, trees, sunny day' },
+    { title: '🏋️ Sport/Gym', prompt: 'sports bra, gym shorts, stretching, sitting on floor, legs spread, determined expression, gym background, exercise mats' },
+    { title: '🏖️ Strand/Bikini', prompt: 'bikini, standing, hand on hip, confident pose, smiling, beach background, ocean, sand, sunny' },
+    { title: '😴 Lazy Zuhause', prompt: 'pajamas, oversized shirt, lying on bed, on side, sleepy expression, yawning, bedroom background, pillow, blanket' },
+    { title: '🏫 Schule Formal', prompt: 'school uniform, blazer, pleated skirt, standing, arms behind back, shy expression, blushing, classroom background, desks, windows' },
+    { title: '🏃 Action/Rennen', prompt: 'tank top, shorts, running, dynamic pose, determined expression, motion blur, outdoor, city street, from side' },
+    { title: '🍳 Kochen', prompt: 'apron, casual clothes, standing, holding spatula, concentrated expression, kitchen background, counter, cooking' },
+    { title: '👗 Abendkleid', prompt: 'elegant dress, standing, hand on chest, gentle smile, night background, city lights, bokeh' },
+    { title: '❄️ Winter Outfit', prompt: 'winter coat, scarf, mittens, standing, holding hot drink, smiling, snowing, outdoor, winter scenery' },
+    { title: '🔙 Von Hinten', prompt: 'casual dress, standing, from behind, looking back, playful expression, simple background' },
+    { title: '☕ Café Sitzend', prompt: 'sweater, jeans, sitting, holding coffee cup, relaxed expression, cafe background, window, table' },
+    { title: '📐 Von Unten', prompt: 'school uniform, standing, hands on hips, confident expression, from below, dramatic angle, simple background' },
+    { title: '📖 Lesen', prompt: 'comfy sweater, sitting on couch, holding book, reading, concentrated expression, living room, warm lighting' },
+    { title: '👤 Seitenprofil', prompt: 'simple dress, standing, from side, wind, hair flowing, serene expression, outdoor, sky background' }
+  ],
+  es: [
+    { title: '🎮 Gaming Original', prompt: 'cat ear hoodie, dark green hoodie, school uniform, white shirt, red ribbon bow, holding game controller, sitting, gaming pose, shy expression, blush, simple background' },
+    { title: '👕 Casual Exterior', prompt: 'oversized t-shirt, denim shorts, standing, hands in pockets, relaxed expression, slight smile, park background, trees, sunny day' },
+    { title: '🏋️ Deporte/Gym', prompt: 'sports bra, gym shorts, stretching, sitting on floor, legs spread, determined expression, gym background, exercise mats' },
+    { title: '🏖️ Playa/Bikini', prompt: 'bikini, standing, hand on hip, confident pose, smiling, beach background, ocean, sand, sunny' },
+    { title: '😴 Floja en Casa', prompt: 'pajamas, oversized shirt, lying on bed, on side, sleepy expression, yawning, bedroom background, pillow, blanket' },
+    { title: '🏫 Escuela Formal', prompt: 'school uniform, blazer, pleated skirt, standing, arms behind back, shy expression, blushing, classroom background, desks, windows' },
+    { title: '🏃 Acción/Corriendo', prompt: 'tank top, shorts, running, dynamic pose, determined expression, motion blur, outdoor, city street, from side' },
+    { title: '🍳 Cocinando', prompt: 'apron, casual clothes, standing, holding spatula, concentrated expression, kitchen background, counter, cooking' },
+    { title: '👗 Vestido Elegante', prompt: 'elegant dress, standing, hand on chest, gentle smile, night background, city lights, bokeh' },
+    { title: '❄️ Ropa de Invierno', prompt: 'winter coat, scarf, mittens, standing, holding hot drink, smiling, snowing, outdoor, winter scenery' },
+    { title: '🔙 Desde Atrás', prompt: 'casual dress, standing, from behind, looking back, playful expression, simple background' },
+    { title: '☕ Sentada en Café', prompt: 'sweater, jeans, sitting, holding coffee cup, relaxed expression, cafe background, window, table' },
+    { title: '📐 Ángulo Bajo', prompt: 'school uniform, standing, hands on hips, confident expression, from below, dramatic angle, simple background' },
+    { title: '📖 Leyendo', prompt: 'comfy sweater, sitting on couch, holding book, reading, concentrated expression, living room, warm lighting' },
+    { title: '👤 Perfil Lateral', prompt: 'simple dress, standing, from side, wind, hair flowing, serene expression, outdoor, sky background' }
+  ]
+};
+
 // UI Strings
 const STRINGS = {
   de: {
@@ -167,7 +205,10 @@ const STRINGS = {
     use_generate: 'Nutze /generate um zu starten!',
     total: 'Total',
     workflow_tip: '*Workflow-Tipp:*',
-    workflow_tip_text: 'Nach Generierung → "🔄 Neuer Prompt" für gleiche LoRAs!\nSpart Zeit beim Experimentieren mit Prompts.'
+    workflow_tip_text: 'Nach Generierung → "🔄 Neuer Prompt" für gleiche LoRAs!\nSpart Zeit beim Experimentieren mit Prompts.',
+    examples_title: '💡 *Beispiel-Prompts*',
+    examples_tip: 'Kopiere einen Prompt oder lass dich inspirieren!',
+    click_to_copy: 'Klicke zum Kopieren:'
   },
   es: {
     start_title: '🎨 *Generador de Imágenes Yuki*',
@@ -200,7 +241,10 @@ const STRINGS = {
     use_generate: '¡Usa /generar para empezar!',
     total: 'Total',
     workflow_tip: '*Consejo:*',
-    workflow_tip_text: 'Después de generar → "🔄 Nuevo Prompt" ¡para mismos LoRAs!\nAhorra tiempo al experimentar con prompts.'
+    workflow_tip_text: 'Después de generar → "🔄 Nuevo Prompt" ¡para mismos LoRAs!\nAhorra tiempo al experimentar con prompts.',
+    examples_title: '💡 *Ejemplos de Prompts*',
+    examples_tip: '¡Copia un prompt o inspírate!',
+    click_to_copy: 'Haz clic para copiar:'
   }
 };
 
@@ -341,6 +385,7 @@ bot.onText(/\/start/, (msg) => {
     `${t(chatId, 'start_desc')}\n\n` +
     `${t(chatId, 'start_commands')}\n` +
     `/generate - Wizard starten\n` +
+    `/examples - Beispiel-Prompts 💡\n` +
     `/settings - Einstellungen\n` +
     `/help - Hilfe\n` +
     `/espanol - Cambiar a español`,
@@ -358,10 +403,43 @@ bot.onText(/\/(espanol|inicio)/, (msg) => {
     `${t(chatId, 'start_desc')}\n\n` +
     `${t(chatId, 'start_commands')}\n` +
     `/generar - Iniciar asistente\n` +
+    `/ejemplos - Ejemplos de prompts 💡\n` +
     `/configuración - Configuración\n` +
     `/ayuda - Ayuda\n` +
     `/deutsch - Wechseln zu Deutsch`,
     { parse_mode: 'Markdown' }
+  );
+});
+
+bot.onText(/\/(examples|ejemplos)/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  const lang = session.language || 'de';
+  
+  const examples = EXAMPLE_PROMPTS[lang];
+  
+  // Build keyboard with example prompts
+  const keyboard = [];
+  
+  for (let i = 0; i < examples.length; i++) {
+    keyboard.push([
+      { 
+        text: examples[i].title, 
+        callback_data: `example_${i}` 
+      }
+    ]);
+  }
+  
+  bot.sendMessage(chatId,
+    `${t(chatId, 'examples_title')}\n\n` +
+    `${t(chatId, 'examples_tip')}\n\n` +
+    `${t(chatId, 'click_to_copy')}`,
+    {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: keyboard
+      }
+    }
   );
 });
 
@@ -380,6 +458,7 @@ bot.onText(/\/(help|ayuda)/, (msg) => {
     `◀️ Zurück = Vorherige Kategorie\n\n` +
     `*Commands:*\n` +
     `/current - Aktuell gewählte LoRAs\n` +
+    `/examples - 15 Beispiel-Prompts 💡\n` +
     `/test <prompt> - Quick test ohne LoRAs\n` +
     `/checkmodel - Welches Model ist geladen?\n` +
     `/settings - Alle Einstellungen\n` +
@@ -641,12 +720,17 @@ function showWizardStep(chatId) {
     const exampleText = lang === 'es' 
       ? '(ej. "sentada en un banco, atardecer, sonriendo")'
       : '(z.B. "sitting on a bench, sunset, smiling")';
+    const examplesCmd = lang === 'es' ? '/ejemplos' : '/examples';
+    const examplesTip = lang === 'es' 
+      ? `💡 Usa ${examplesCmd} para ver 15 ejemplos de prompts!`
+      : `💡 Nutze ${examplesCmd} für 15 Beispiel-Prompts!`;
     
     bot.sendMessage(chatId,
       `📝 *${stepText}*\n\n` +
       `${t(chatId, 'your_selection')}:\n${summary}\n\n` +
       `${t(chatId, 'send_prompt_now')}\n` +
-      exampleText,
+      exampleText + `\n\n` +
+      examplesTip,
       { parse_mode: 'Markdown' }
     );
     return;
@@ -687,6 +771,28 @@ bot.on('callback_query', async (query) => {
   
   const session = getSession(chatId);
   
+  // ===== EXAMPLE PROMPTS =====
+  
+  if (data.startsWith('example_')) {
+    const index = parseInt(data.replace('example_', ''));
+    const lang = session.language || 'de';
+    const example = EXAMPLE_PROMPTS[lang][index];
+    
+    await bot.answerCallbackQuery(query.id, {
+      text: '✅ Prompt kopiert!'
+    });
+    
+    // Send prompt as message so user can copy it
+    await bot.sendMessage(chatId,
+      `📋 *${example.title}*\n\n` +
+      `\`${example.prompt}\`\n\n` +
+      `👆 Kopiere und sende diesen Prompt!`,
+      { parse_mode: 'Markdown' }
+    );
+    
+    return;
+  }
+  
   // ===== CONTINUE OPTIONS (after generation) =====
   
   if (data === 'continue_same') {
@@ -708,11 +814,17 @@ bot.on('callback_query', async (query) => {
     
     await bot.deleteMessage(chatId, messageId);
     
+    const examplesCmd = lang === 'es' ? '/ejemplos' : '/examples';
+    const examplesTip = lang === 'es' 
+      ? `💡 ${examplesCmd} para ejemplos`
+      : `💡 ${examplesCmd} für Beispiele`;
+    
     // Show prompt step with current selections
     await bot.sendMessage(chatId,
       `${headerText}\n\n` +
       `${t(chatId, 'your_selection')}:\n${summary}\n\n` +
-      `${t(chatId, 'send_prompt_now')}`,
+      `${t(chatId, 'send_prompt_now')}\n\n` +
+      examplesTip,
       { parse_mode: 'Markdown' }
     );
     
