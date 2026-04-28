@@ -19,9 +19,10 @@ const DEFAULT_CONFIG = {
   negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
   seed: -1,  // Random seed
   
-  // Model Settings
-  checkpoint: "aom3.safetensors",
-  vae: "vae-ft-mse-840000-ema-pruned.safetensors",
+  // Model Settings (WICHTIG: Name MUSS EXAKT mit A1111 Model-Liste übereinstimmen!)
+  // Checke mit: http://127.0.0.1:7860/sdapi/v1/sd-models
+  checkpoint: "noobaiXLNAIXL_epsilonPred05.safetensors",  // NoobAI XL (anpassen falls anders!)
+  vae: "sdxl_vae.safetensors",  // Standard SDXL VAE
   
   // LoRA + Default Prefix
   loras: [
@@ -224,7 +225,12 @@ bot.onText(/\/help/, (msg) => {
     `✅ = Ausgewählt (mehrere pro Kategorie möglich)\n` +
     `▶️ Weiter = Skip zur nächsten Kategorie\n` +
     `◀️ Zurück = Vorherige Kategorie\n\n` +
-    `*Einstellungen:*\n` +
+    `*Commands:*\n` +
+    `/settings - Einstellungen anzeigen\n` +
+    `/setmodel <name> - Model wechseln\n` +
+    `/setvae <name> - VAE wechseln\n` +
+    `/debug - Debug Info\n\n` +
+    `*Current Settings:*\n` +
     `• Steps: ${DEFAULT_CONFIG.steps}\n` +
     `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
     `• Größe: ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}\n` +
@@ -245,6 +251,24 @@ bot.onText(/\/debug/, (msg) => {
     `selections: ${JSON.stringify(session.selections, null, 2)}`,
     { parse_mode: 'Markdown' }
   );
+});
+
+bot.onText(/\/setmodel (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const modelName = match[1];
+  
+  DEFAULT_CONFIG.checkpoint = modelName;
+  
+  bot.sendMessage(chatId, `✅ Model gesetzt: ${modelName}\n\nWird bei der nächsten Generierung geladen!`);
+});
+
+bot.onText(/\/setvae (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const vaeName = match[1];
+  
+  DEFAULT_CONFIG.vae = vaeName;
+  
+  bot.sendMessage(chatId, `✅ VAE gesetzt: ${vaeName}\n\nWird bei der nächsten Generierung geladen!`);
 });
 
 bot.onText(/\/settings/, (msg) => {
@@ -268,7 +292,10 @@ bot.onText(/\/settings/, (msg) => {
     `• Character LoRA: ${loraText}\n` +
     `• Default Prefix: ${prefixText}\n` +
     `• Negative Prompt: ${DEFAULT_CONFIG.negative_prompt}\n` +
-    `• Seed: ${DEFAULT_CONFIG.seed === -1 ? 'Random' : DEFAULT_CONFIG.seed}`
+    `• Seed: ${DEFAULT_CONFIG.seed === -1 ? 'Random' : DEFAULT_CONFIG.seed}\n\n` +
+    `Zum Ändern:\n` +
+    `/setmodel <name> - Model wechseln\n` +
+    `/setvae <name> - VAE wechseln`
   );
 });
 
@@ -524,6 +551,27 @@ async function generateImage(chatId, prompt) {
     
     console.log(`[${new Date().toISOString()}] User prompt: "${prompt}"`);
     
+    // 1. Set Model/VAE BEFORE generation (if configured)
+    if (DEFAULT_CONFIG.checkpoint || DEFAULT_CONFIG.vae) {
+      try {
+        console.log(`[API] Setting checkpoint: ${DEFAULT_CONFIG.checkpoint}, VAE: ${DEFAULT_CONFIG.vae}`);
+        
+        await axios.post(
+          `${A1111_URL}/sdapi/v1/options`,
+          {
+            sd_model_checkpoint: DEFAULT_CONFIG.checkpoint,
+            sd_vae: DEFAULT_CONFIG.vae
+          },
+          { timeout: 30000 }
+        );
+        
+        console.log(`[API] Model/VAE set successfully`);
+      } catch (err) {
+        console.warn(`[API] Failed to set model/VAE: ${err.message}`);
+        // Continue anyway - use whatever model is loaded
+      }
+    }
+    
     const session = getSession(chatId);
     
     // Build full prompt with all LoRAs
@@ -568,13 +616,10 @@ async function generateImage(chatId, prompt) {
       width: DEFAULT_CONFIG.width,
       height: DEFAULT_CONFIG.height,
       sampler_name: DEFAULT_CONFIG.sampler_name,
-      seed: DEFAULT_CONFIG.seed,
+      seed: DEFAULT_CONFIG.seed
       
-      override_settings: {
-        sd_model_checkpoint: DEFAULT_CONFIG.checkpoint,
-        sd_vae: DEFAULT_CONFIG.vae
-      },
-      override_settings_restore_afterwards: false
+      // Note: Model/VAE wird jetzt VOR der Generation via /sdapi/v1/options gesetzt
+      // Kein override_settings mehr nötig (A1111 ignoriert es manchmal)
     };
     
     const response = await axios.post(
