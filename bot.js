@@ -56,27 +56,27 @@ const CLOTHING_LORAS = [
 // Session state für User
 const userSessions = {};
 
+// Helper: Get user session
+function getSession(chatId) {
+  if (!userSessions[chatId]) {
+    userSessions[chatId] = {
+      selectedClothing: [] // Array für mehrere Outfits
+    };
+  }
+  return userSessions[chatId];
+}
+
 // /start Command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   
-  // Clothing Menu erstellen
-  const clothingKeyboard = [];
-  for (let i = 0; i < CLOTHING_LORAS.length; i += 2) {
-    const row = [
-      { text: CLOTHING_LORAS[i].display, callback_data: `cloth_${i}` }
-    ];
-    if (i + 1 < CLOTHING_LORAS.length) {
-      row.push({ text: CLOTHING_LORAS[i + 1].display, callback_data: `cloth_${i + 1}` });
-    }
-    clothingKeyboard.push(row);
-  }
+  const clothingKeyboard = buildClothingMenu(chatId);
   
   bot.sendMessage(chatId, 
     `🎨 *Yuki Image Generator*\n\n` +
-    `Wähle ein Outfit oder sende direkt einen Prompt!\n\n` +
+    `Wähle Outfits (mehrere möglich!) oder sende direkt einen Prompt!\n\n` +
     `*Commands:*\n` +
-    `/clothing - Outfit wählen\n` +
+    `/clothing - Outfit-Menü öffnen\n` +
     `/settings - Aktuelle Einstellungen\n` +
     `/help - Hilfe anzeigen`,
     { 
@@ -107,30 +107,59 @@ bot.onText(/\/help/, (msg) => {
   );
 });
 
-// /clothing Command
-bot.onText(/\/clothing/, (msg) => {
-  const chatId = msg.chat.id;
+// Helper: Build clothing menu with checkmarks
+function buildClothingMenu(chatId) {
+  const session = getSession(chatId);
+  const selected = session.selectedClothing || [];
   
-  // Clothing Menu erstellen
   const clothingKeyboard = [];
   for (let i = 0; i < CLOTHING_LORAS.length; i += 2) {
+    const isSelected1 = selected.includes(i);
+    const checkmark1 = isSelected1 ? '✅ ' : '';
+    
     const row = [
-      { text: CLOTHING_LORAS[i].display, callback_data: `cloth_${i}` }
+      { 
+        text: checkmark1 + CLOTHING_LORAS[i].display, 
+        callback_data: `cloth_${i}` 
+      }
     ];
+    
     if (i + 1 < CLOTHING_LORAS.length) {
-      row.push({ text: CLOTHING_LORAS[i + 1].display, callback_data: `cloth_${i + 1}` });
+      const isSelected2 = selected.includes(i + 1);
+      const checkmark2 = isSelected2 ? '✅ ' : '';
+      row.push({ 
+        text: checkmark2 + CLOTHING_LORAS[i + 1].display, 
+        callback_data: `cloth_${i + 1}` 
+      });
     }
+    
     clothingKeyboard.push(row);
   }
   
+  // Reset Button
+  clothingKeyboard.push([
+    { text: '🗑️ Alle abwählen', callback_data: 'cloth_reset' }
+  ]);
+  
+  return clothingKeyboard;
+}
+
+// /clothing Command
+bot.onText(/\/clothing/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  
+  const clothingKeyboard = buildClothingMenu(chatId);
+  
   // Aktuelles Outfit anzeigen
-  const currentSession = userSessions[chatId] || {};
-  const currentClothing = currentSession.clothing || 'Keine Auswahl';
+  const selectedNames = session.selectedClothing.map(idx => CLOTHING_LORAS[idx].display);
+  const currentClothing = selectedNames.length > 0 ? selectedNames.join(', ') : 'Keine Auswahl';
   
   bot.sendMessage(chatId,
-    `👗 *Wähle Outfit für Yuki*\n\n` +
+    `👗 *Wähle Outfits für Yuki*\n\n` +
+    `✅ = Ausgewählt (mehrere möglich!)\n` +
     `Aktuell: ${currentClothing}\n\n` +
-    `Klicke ein Outfit, dann sende deinen Prompt!`,
+    `Klicke Outfits, dann sende Prompt!`,
     {
       parse_mode: 'Markdown',
       reply_markup: {
@@ -177,31 +206,78 @@ bot.onText(/\/generate (.+)/, async (msg, match) => {
 // Callback Query Handler (Button Clicks)
 bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
+  const messageId = query.message.message_id;
   const data = query.data;
   
-  // Clothing Selection
+  const session = getSession(chatId);
+  
+  // Reset Selection
+  if (data === 'cloth_reset') {
+    session.selectedClothing = [];
+    
+    await bot.answerCallbackQuery(query.id, {
+      text: '🗑️ Alle abgewählt!'
+    });
+    
+    // Update Menu
+    const clothingKeyboard = buildClothingMenu(chatId);
+    await bot.editMessageReplyMarkup(
+      { inline_keyboard: clothingKeyboard },
+      { chat_id: chatId, message_id: messageId }
+    );
+    
+    return;
+  }
+  
+  // Clothing Toggle
   if (data.startsWith('cloth_')) {
     const index = parseInt(data.replace('cloth_', ''));
     const selectedClothing = CLOTHING_LORAS[index];
     
-    // Session initialisieren falls nötig
-    if (!userSessions[chatId]) {
-      userSessions[chatId] = {};
+    // Toggle selection
+    const currentSelected = session.selectedClothing || [];
+    const indexPos = currentSelected.indexOf(index);
+    
+    if (indexPos > -1) {
+      // Already selected → Remove
+      currentSelected.splice(indexPos, 1);
+      await bot.answerCallbackQuery(query.id, {
+        text: `❌ ${selectedClothing.display} abgewählt`
+      });
+    } else {
+      // Not selected → Add
+      currentSelected.push(index);
+      await bot.answerCallbackQuery(query.id, {
+        text: `✅ ${selectedClothing.display} hinzugefügt!`
+      });
     }
     
-    // Clothing LoRA setzen
-    userSessions[chatId].clothing = selectedClothing.display;
-    userSessions[chatId].clothingLora = selectedClothing.name;
+    session.selectedClothing = currentSelected;
     
-    // Bestätigung
-    await bot.answerCallbackQuery(query.id, {
-      text: `✅ ${selectedClothing.display} ausgewählt!`
-    });
+    // Update Menu mit neuen Checkmarks
+    const clothingKeyboard = buildClothingMenu(chatId);
+    await bot.editMessageReplyMarkup(
+      { inline_keyboard: clothingKeyboard },
+      { chat_id: chatId, message_id: messageId }
+    );
     
-    await bot.sendMessage(chatId,
-      `✅ *Outfit gewählt:* ${selectedClothing.display}\n\n` +
-      `Sende jetzt deinen Prompt! (z.B. "sitting on a bench, sunset background")`,
-      { parse_mode: 'Markdown' }
+    // Update Text mit aktueller Auswahl
+    const selectedNames = currentSelected.map(idx => CLOTHING_LORAS[idx].display);
+    const currentClothingText = selectedNames.length > 0 ? selectedNames.join(', ') : 'Keine Auswahl';
+    
+    await bot.editMessageText(
+      `👗 *Wähle Outfits für Yuki*\n\n` +
+      `✅ = Ausgewählt (mehrere möglich!)\n` +
+      `Aktuell: ${currentClothingText}\n\n` +
+      `Klicke Outfits, dann sende Prompt!`,
+      {
+        chat_id: chatId,
+        message_id: messageId,
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: clothingKeyboard
+        }
+      }
     );
   }
 });
@@ -236,10 +312,14 @@ async function generateImage(chatId, prompt) {
       fullPrompt += loraStrings.join(' ') + ' ';
     }
     
-    // 2. Clothing LoRA hinzufügen (falls gewählt)
-    const session = userSessions[chatId] || {};
-    if (session.clothingLora) {
-      fullPrompt += `<lora:${session.clothingLora}:0.7> `;
+    // 2. Clothing LoRAs hinzufügen (falls gewählt, mehrere möglich!)
+    const session = getSession(chatId);
+    if (session.selectedClothing && session.selectedClothing.length > 0) {
+      const clothingLoraStrings = session.selectedClothing.map(idx => {
+        const lora = CLOTHING_LORAS[idx];
+        return `<lora:${lora.name}:0.7>`;
+      });
+      fullPrompt += clothingLoraStrings.join(' ') + ' ';
     }
     
     // 3. Default Prefix hinzufügen
@@ -293,9 +373,10 @@ async function generateImage(chatId, prompt) {
       caption += `Character: ${loraInfo}\n`;
     }
     
-    // Clothing LoRA Info
-    if (session.clothingLora) {
-      caption += `Outfit: ${session.clothing} (${session.clothingLora})\n`;
+    // Clothing LoRAs Info
+    if (session.selectedClothing && session.selectedClothing.length > 0) {
+      const clothingNames = session.selectedClothing.map(idx => CLOTHING_LORAS[idx].display);
+      caption += `Outfits: ${clothingNames.join(', ')}\n`;
     }
     
     caption += `\nSteps: ${DEFAULT_CONFIG.steps} | CFG: ${DEFAULT_CONFIG.cfg_scale} | ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}`;
