@@ -118,11 +118,90 @@ const LORA_CATEGORIES = {
 const WIZARD_STEPS = ['clothing', 'pose', 'background', 'style', 'prompt'];
 
 const STEP_TITLES = {
-  clothing: '👗 Wähle Clothing (0-N)',
-  pose: '💃 Wähle Pose (0-N)',
-  background: '🏞️ Wähle Background (0-N)',
-  style: '🎨 Wähle Style (0-N)',
-  prompt: '📝 Sende deinen Prompt'
+  de: {
+    clothing: '👗 Wähle Clothing (0-N)',
+    pose: '💃 Wähle Pose (0-N)',
+    background: '🏞️ Wähle Background (0-N)',
+    style: '🎨 Wähle Style (0-N)',
+    prompt: '📝 Sende deinen Prompt'
+  },
+  es: {
+    clothing: '👗 Elige Ropa (0-N)',
+    pose: '💃 Elige Pose (0-N)',
+    background: '🏞️ Elige Fondo (0-N)',
+    style: '🎨 Elige Estilo (0-N)',
+    prompt: '📝 Envía tu prompt'
+  }
+};
+
+// UI Strings
+const STRINGS = {
+  de: {
+    start_title: '🎨 *Yuki Image Generator*',
+    start_desc: 'Nutze /generate um Schritt für Schritt ein Bild zu erstellen!',
+    start_commands: '*Commands:*',
+    help_workflow: '*Workflow:*',
+    help_step1: '1️⃣ /generate - Wizard starten',
+    help_step2: '2️⃣ Wähle Clothing (0-N)',
+    help_step3: '3️⃣ Wähle Pose (0-N)',
+    help_step4: '4️⃣ Wähle Background (0-N)',
+    help_step5: '5️⃣ Wähle Style (0-N)',
+    help_step6: '6️⃣ Sende Prompt → Bild generiert!',
+    selected: 'Ausgewählt',
+    next: '▶️ Weiter',
+    back: '◀️ Zurück',
+    reset: '🗑️ Auswahl löschen',
+    step_of: 'Schritt',
+    currently: 'Aktuell',
+    none: 'Keine',
+    your_selection: 'Deine Auswahl',
+    send_prompt_now: 'Sende jetzt deinen Prompt!',
+    continue_question: '✨ Was als Nächstes?',
+    continue_same: '🔄 Neuer Prompt (gleiche LoRAs)',
+    continue_new: '🆕 Neuer Wizard',
+    continue_same_desc: '🔄 = Gleiche LoRAs behalten, nur neuen Prompt',
+    continue_new_desc: '🆕 = Wizard neu starten',
+    generating: '🎨 Generiere Bild...',
+    current_selection: '📋 *Aktuelle LoRA-Auswahl*',
+    no_selection: 'Keine LoRAs ausgewählt.',
+    use_generate: 'Nutze /generate um zu starten!',
+    total: 'Total',
+    workflow_tip: '*Workflow-Tipp:*',
+    workflow_tip_text: 'Nach Generierung → "🔄 Neuer Prompt" für gleiche LoRAs!\nSpart Zeit beim Experimentieren mit Prompts.'
+  },
+  es: {
+    start_title: '🎨 *Generador de Imágenes Yuki*',
+    start_desc: '¡Usa /generar para crear una imagen paso a paso!',
+    start_commands: '*Comandos:*',
+    help_workflow: '*Flujo de trabajo:*',
+    help_step1: '1️⃣ /generar - Iniciar asistente',
+    help_step2: '2️⃣ Elige Ropa (0-N)',
+    help_step3: '3️⃣ Elige Pose (0-N)',
+    help_step4: '4️⃣ Elige Fondo (0-N)',
+    help_step5: '5️⃣ Elige Estilo (0-N)',
+    help_step6: '6️⃣ Envía prompt → ¡Imagen generada!',
+    selected: 'Seleccionado',
+    next: '▶️ Siguiente',
+    back: '◀️ Atrás',
+    reset: '🗑️ Borrar selección',
+    step_of: 'Paso',
+    currently: 'Actual',
+    none: 'Ninguno',
+    your_selection: 'Tu selección',
+    send_prompt_now: '¡Envía tu prompt ahora!',
+    continue_question: '✨ ¿Qué hacer ahora?',
+    continue_same: '🔄 Nuevo Prompt (mismos LoRAs)',
+    continue_new: '🆕 Nuevo Asistente',
+    continue_same_desc: '🔄 = Mantener LoRAs, solo nuevo prompt',
+    continue_new_desc: '🆕 = Reiniciar asistente',
+    generating: '🎨 Generando imagen...',
+    current_selection: '📋 *Selección actual de LoRAs*',
+    no_selection: 'No hay LoRAs seleccionados.',
+    use_generate: '¡Usa /generar para empezar!',
+    total: 'Total',
+    workflow_tip: '*Consejo:*',
+    workflow_tip_text: 'Después de generar → "🔄 Nuevo Prompt" ¡para mismos LoRAs!\nAhorra tiempo al experimentar con prompts.'
+  }
 };
 
 // ==================== SESSION MANAGEMENT ====================
@@ -134,6 +213,7 @@ function getSession(chatId) {
     userSessions[chatId] = {
       wizardActive: false,
       currentStep: 0,
+      language: 'de',  // Default: Deutsch
       selections: {
         clothing: [],
         pose: [],
@@ -143,6 +223,12 @@ function getSession(chatId) {
     };
   }
   return userSessions[chatId];
+}
+
+function t(chatId, key) {
+  const session = getSession(chatId);
+  const lang = session.language || 'de';
+  return STRINGS[lang][key] || key;
 }
 
 function resetWizard(chatId) {
@@ -195,18 +281,18 @@ function buildCategoryMenu(chatId, category) {
   
   // Back button (if not first step)
   if (session.currentStep > 0) {
-    navRow.push({ text: '◀️ Zurück', callback_data: 'wiz_back' });
+    navRow.push({ text: t(chatId, 'back'), callback_data: 'wiz_back' });
   }
   
   // Next/Skip button
-  navRow.push({ text: '▶️ Weiter', callback_data: 'wiz_next' });
+  navRow.push({ text: t(chatId, 'next'), callback_data: 'wiz_next' });
   
   keyboard.push(navRow);
   
   // Reset button
   if (selected.length > 0) {
     keyboard.push([
-      { text: '🗑️ Auswahl löschen', callback_data: `wiz_reset_${category}` }
+      { text: t(chatId, 'reset'), callback_data: `wiz_reset_${category}` }
     ]);
   }
   
@@ -237,18 +323,39 @@ console.log('🤖 Telegram SD Bot gestartet!');
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  session.language = 'de';  // Deutsch
+  
   bot.sendMessage(chatId, 
-    `🎨 *Yuki Image Generator*\n\n` +
-    `Nutze /generate um Schritt für Schritt ein Bild zu erstellen!\n\n` +
-    `*Commands:*\n` +
+    `${t(chatId, 'start_title')}\n\n` +
+    `${t(chatId, 'start_desc')}\n\n` +
+    `${t(chatId, 'start_commands')}\n` +
     `/generate - Wizard starten\n` +
-    `/settings - Aktuelle Einstellungen\n` +
-    `/help - Hilfe anzeigen`,
+    `/settings - Einstellungen\n` +
+    `/help - Hilfe\n` +
+    `/español - Cambiar a español`,
     { parse_mode: 'Markdown' }
   );
 });
 
-bot.onText(/\/help/, (msg) => {
+bot.onText(/\/(español|inicio)/, (msg) => {
+  const chatId = msg.chat.id;
+  const session = getSession(chatId);
+  session.language = 'es';  // Español
+  
+  bot.sendMessage(chatId, 
+    `${t(chatId, 'start_title')}\n\n` +
+    `${t(chatId, 'start_desc')}\n\n` +
+    `${t(chatId, 'start_commands')}\n` +
+    `/generar - Iniciar asistente\n` +
+    `/configuración - Configuración\n` +
+    `/ayuda - Ayuda\n` +
+    `/deutsch - Wechseln zu Deutsch`,
+    { parse_mode: 'Markdown' }
+  );
+});
+
+bot.onText(/\/(help|ayuda)/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId,
     `*Workflow:*\n\n` +
@@ -297,9 +404,10 @@ bot.onText(/\/checkmodel/, async (msg) => {
   }
 });
 
-bot.onText(/\/current/, (msg) => {
+bot.onText(/\/(current|actual)/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
+  const lang = session.language || 'de';
   
   const summary = getSelectionSummary(session);
   
@@ -310,20 +418,26 @@ bot.onText(/\/current/, (msg) => {
   }
   
   if (totalLoras === 0) {
+    const cmd = lang === 'es' ? '/generar' : '/generate';
     bot.sendMessage(chatId, 
-      '📋 *Aktuelle Auswahl*\n\n' +
-      'Keine LoRAs ausgewählt.\n\n' +
-      'Nutze /generate um zu starten!',
+      `${t(chatId, 'current_selection')}\n\n` +
+      `${t(chatId, 'no_selection')}\n\n` +
+      `${t(chatId, 'use_generate').replace('/generate', cmd)}`,
       { parse_mode: 'Markdown' }
     );
     return;
   }
   
+  const cmd = lang === 'es' ? '/generar' : '/generate';
+  const sendPromptText = lang === 'es' 
+    ? `Envía un prompt o usa ${cmd} para nueva selección!`
+    : `Sende einen Prompt oder nutze ${cmd} für neue Auswahl!`;
+  
   bot.sendMessage(chatId,
-    `📋 *Aktuelle LoRA-Auswahl*\n\n` +
+    `${t(chatId, 'current_selection')}\n\n` +
     `${summary}\n\n` +
-    `Total: ${totalLoras} LoRAs\n\n` +
-    `Sende einen Prompt oder nutze /generate für neue Auswahl!`,
+    `${t(chatId, 'total')}: ${totalLoras} LoRAs\n\n` +
+    sendPromptText,
     { parse_mode: 'Markdown' }
   );
 });
@@ -483,9 +597,14 @@ bot.onText(/\/settings/, (msg) => {
 
 // ==================== WIZARD START ====================
 
-bot.onText(/\/generate/, (msg) => {
+bot.onText(/\/(generate|generar)/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
+  
+  // Auto-detect language from command
+  if (msg.text.includes('generar')) {
+    session.language = 'es';
+  }
   
   // Reset and start wizard
   resetWizard(chatId);
@@ -498,8 +617,9 @@ bot.onText(/\/generate/, (msg) => {
 function showWizardStep(chatId) {
   const session = getSession(chatId);
   const stepName = WIZARD_STEPS[session.currentStep];
+  const lang = session.language || 'de';
   
-  console.log(`[WIZARD] Chat ${chatId} - Step ${session.currentStep}: ${stepName}`);
+  console.log(`[WIZARD] Chat ${chatId} - Step ${session.currentStep}: ${stepName} (${lang})`);
   
   // Final step: Prompt input
   if (stepName === 'prompt') {
@@ -507,11 +627,16 @@ function showWizardStep(chatId) {
     
     console.log(`[WIZARD] Showing prompt step. Summary: ${summary}`);
     
+    const stepText = lang === 'es' ? 'Paso 5/5: Prompt' : 'Schritt 5/5: Prompt';
+    const exampleText = lang === 'es' 
+      ? '(ej. "sentada en un banco, atardecer, sonriendo")'
+      : '(z.B. "sitting on a bench, sunset, smiling")';
+    
     bot.sendMessage(chatId,
-      `📝 *Schritt 5/5: Prompt*\n\n` +
-      `Deine Auswahl:\n${summary}\n\n` +
-      `Sende jetzt deinen Prompt!\n` +
-      `(z.B. "sitting on a bench, sunset, smiling")`,
+      `📝 *${stepText}*\n\n` +
+      `${t(chatId, 'your_selection')}:\n${summary}\n\n` +
+      `${t(chatId, 'send_prompt_now')}\n` +
+      exampleText,
       { parse_mode: 'Markdown' }
     );
     return;
@@ -525,13 +650,16 @@ function showWizardStep(chatId) {
   const selected = session.selections[stepName] || [];
   const items = LORA_CATEGORIES[stepName];
   const selectedNames = selected.map(idx => items[idx].display);
-  const selectionText = selectedNames.length > 0 ? selectedNames.join(', ') : 'Keine';
+  const selectionText = selectedNames.length > 0 ? selectedNames.join(', ') : t(chatId, 'none');
+  
+  const selectedLabel = lang === 'es' ? 'Seleccionado' : 'Ausgewählt';
+  const skipLabel = lang === 'es' ? 'Saltar' : 'Skip';
   
   bot.sendMessage(chatId,
-    `${STEP_TITLES[stepName]}\n\n` +
-    `Schritt ${stepNumber}/${totalSteps}\n` +
-    `✅ = Ausgewählt | ▶️ Weiter = Skip\n\n` +
-    `Aktuell: ${selectionText}`,
+    `${STEP_TITLES[lang][stepName]}\n\n` +
+    `${t(chatId, 'step_of')} ${stepNumber}/${totalSteps}\n` +
+    `✅ = ${selectedLabel} | ${t(chatId, 'next')} = ${skipLabel}\n\n` +
+    `${t(chatId, 'currently')}: ${selectionText}`,
     {
       reply_markup: {
         inline_keyboard: keyboard
@@ -557,18 +685,24 @@ bot.on('callback_query', async (query) => {
     session.currentStep = 4;  // Step 4 = prompt
     
     const summary = getSelectionSummary(session);
+    const lang = session.language || 'de';
+    
+    const callbackText = lang === 'es' ? '🔄 ¡LoRAs mantenidos!' : '🔄 LoRAs behalten!';
+    const headerText = lang === 'es' 
+      ? '📝 *Nuevo Prompt con mismos LoRAs*'
+      : '📝 *Neuer Prompt mit gleichen LoRAs*';
     
     await bot.answerCallbackQuery(query.id, {
-      text: '🔄 LoRAs behalten!'
+      text: callbackText
     });
     
     await bot.deleteMessage(chatId, messageId);
     
     // Show prompt step with current selections
     await bot.sendMessage(chatId,
-      `📝 *Neuer Prompt mit gleichen LoRAs*\n\n` +
-      `Aktuelle Auswahl:\n${summary}\n\n` +
-      `Sende jetzt deinen neuen Prompt!`,
+      `${headerText}\n\n` +
+      `${t(chatId, 'your_selection')}:\n${summary}\n\n` +
+      `${t(chatId, 'send_prompt_now')}`,
       { parse_mode: 'Markdown' }
     );
     
@@ -577,12 +711,16 @@ bot.on('callback_query', async (query) => {
   
   if (data === 'continue_new') {
     // Reset everything, start fresh
+    const lang = session.language;  // Save language before reset
     resetWizard(chatId);
     session.wizardActive = true;
     session.currentStep = 0;
+    session.language = lang;  // Restore language
+    
+    const callbackText = lang === 'es' ? '🆕 ¡Asistente reiniciado!' : '🆕 Wizard neu gestartet!';
     
     await bot.answerCallbackQuery(query.id, {
-      text: '🆕 Wizard neu gestartet!'
+      text: callbackText
     });
     
     await bot.deleteMessage(chatId, messageId);
@@ -610,7 +748,7 @@ bot.on('callback_query', async (query) => {
     console.log(`[WIZARD] Next clicked. New step: ${session.currentStep} (${WIZARD_STEPS[session.currentStep]})`);
     
     await bot.answerCallbackQuery(query.id, {
-      text: '▶️ Weiter'
+      text: t(chatId, 'next')
     });
     
     await bot.deleteMessage(chatId, messageId);
@@ -623,7 +761,7 @@ bot.on('callback_query', async (query) => {
     session.currentStep--;
     
     await bot.answerCallbackQuery(query.id, {
-      text: '◀️ Zurück'
+      text: t(chatId, 'back')
     });
     
     await bot.deleteMessage(chatId, messageId);
@@ -637,8 +775,11 @@ bot.on('callback_query', async (query) => {
     const category = data.replace('wiz_reset_', '');
     session.selections[category] = [];
     
+    const lang = session.language || 'de';
+    const resetText = lang === 'es' ? '🗑️ Selección borrada' : '🗑️ Auswahl gelöscht';
+    
     await bot.answerCallbackQuery(query.id, {
-      text: '🗑️ Auswahl gelöscht'
+      text: resetText
     });
     
     const keyboard = buildCategoryMenu(chatId, category);
@@ -650,12 +791,16 @@ bot.on('callback_query', async (query) => {
     // Update text
     const stepNumber = session.currentStep + 1;
     const totalSteps = WIZARD_STEPS.length;
+    const lang = session.language || 'de';
+    
+    const selectedLabel = lang === 'es' ? 'Seleccionado' : 'Ausgewählt';
+    const skipLabel = lang === 'es' ? 'Saltar' : 'Skip';
     
     await bot.editMessageText(
-      `${STEP_TITLES[category]}\n\n` +
-      `Schritt ${stepNumber}/${totalSteps}\n` +
-      `✅ = Ausgewählt | ▶️ Weiter = Skip\n\n` +
-      `Aktuell: Keine`,
+      `${STEP_TITLES[lang][category]}\n\n` +
+      `${t(chatId, 'step_of')} ${stepNumber}/${totalSteps}\n` +
+      `✅ = ${selectedLabel} | ${t(chatId, 'next')} = ${skipLabel}\n\n` +
+      `${t(chatId, 'currently')}: ${t(chatId, 'none')}`,
       {
         chat_id: chatId,
         message_id: messageId,
@@ -709,13 +854,17 @@ bot.on('callback_query', async (query) => {
     const stepNumber = session.currentStep + 1;
     const totalSteps = WIZARD_STEPS.length;
     const selectedNames = currentSelected.map(idx => items[idx].display);
-    const selectionText = selectedNames.length > 0 ? selectedNames.join(', ') : 'Keine';
+    const selectionText = selectedNames.length > 0 ? selectedNames.join(', ') : t(chatId, 'none');
+    const lang = session.language || 'de';
+    
+    const selectedLabel = lang === 'es' ? 'Seleccionado' : 'Ausgewählt';
+    const skipLabel = lang === 'es' ? 'Saltar' : 'Skip';
     
     await bot.editMessageText(
-      `${STEP_TITLES[category]}\n\n` +
-      `Schritt ${stepNumber}/${totalSteps}\n` +
-      `✅ = Ausgewählt | ▶️ Weiter = Skip\n\n` +
-      `Aktuell: ${selectionText}`,
+      `${STEP_TITLES[lang][category]}\n\n` +
+      `${t(chatId, 'step_of')} ${stepNumber}/${totalSteps}\n` +
+      `✅ = ${selectedLabel} | ${t(chatId, 'next')} = ${skipLabel}\n\n` +
+      `${t(chatId, 'currently')}: ${selectionText}`,
       {
         chat_id: chatId,
         message_id: messageId,
@@ -787,7 +936,7 @@ bot.on('message', async (msg) => {
 
 async function generateImage(chatId, prompt) {
   try {
-    const statusMsg = await bot.sendMessage(chatId, '🎨 Generiere Bild...');
+    const statusMsg = await bot.sendMessage(chatId, t(chatId, 'generating'));
     
     console.log(`[${new Date().toISOString()}] User prompt: "${prompt}"`);
     
@@ -914,15 +1063,15 @@ async function generateImage(chatId, prompt) {
     // Offer to continue with same settings or restart
     const continueKeyboard = [
       [
-        { text: '🔄 Neuer Prompt (gleiche LoRAs)', callback_data: 'continue_same' },
-        { text: '🆕 Neuer Wizard', callback_data: 'continue_new' }
+        { text: t(chatId, 'continue_same'), callback_data: 'continue_same' },
+        { text: t(chatId, 'continue_new'), callback_data: 'continue_new' }
       ]
     ];
     
     await bot.sendMessage(chatId,
-      '✨ Was als Nächstes?\n\n' +
-      '🔄 = Gleiche LoRAs behalten, nur neuen Prompt\n' +
-      '🆕 = Wizard neu starten',
+      `${t(chatId, 'continue_question')}\n\n` +
+      `${t(chatId, 'continue_same_desc')}\n` +
+      `${t(chatId, 'continue_new_desc')}`,
       {
         reply_markup: {
           inline_keyboard: continueKeyboard
