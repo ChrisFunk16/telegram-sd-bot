@@ -23,9 +23,10 @@ const DEFAULT_CONFIG = {
   seed: -1,  // Random seed
   
   // Model Settings (WICHTIG: Name MUSS EXAKT mit A1111 Model-Liste übereinstimmen!)
-  // Aktuell: AOM3 | Später: novaAnimeXL
-  checkpoint: "novaAnimeXL_illV180.safetensors",  // NovaAnime XL (Illustrious-based)
-  vae: "sdxl_vae.safetensors",  // Standard SDXL VAE (für XL Models)
+  // Nutze /checkmodel um den exakten Namen zu sehen!
+  // Wenn Model-Switch fehlschlägt (500 Error) → einfach leer lassen "" und manuell in A1111 wählen
+  checkpoint: "",  // Leer = nutze was in A1111 GUI gewählt ist
+  vae: "",  // Leer = nutze default VAE
   
   // Alternative Models (zum Wechseln via /setmodel):
   // "AOM3.safetensors" (SD 1.5 - braucht anderen VAE!)
@@ -261,17 +262,11 @@ bot.onText(/\/help/, (msg) => {
     `▶️ Weiter = Skip zur nächsten Kategorie\n` +
     `◀️ Zurück = Vorherige Kategorie\n\n` +
     `*Commands:*\n` +
-    `/settings - Einstellungen anzeigen\n` +
-    `/nova - Quick: NovaAnime XL\n` +
-    `/aom3 - Quick: AOM3\n` +
-    `/setmodel <name> - Model wechseln\n` +
-    `/setvae <name> - VAE wechseln\n` +
+    `/test <prompt> - Quick test ohne LoRAs\n` +
+    `/checkmodel - Welches Model ist geladen?\n` +
+    `/settings - Alle Einstellungen\n` +
     `/debug - Debug Info\n\n` +
-    `*Current Settings:*\n` +
-    `• Steps: ${DEFAULT_CONFIG.steps}\n` +
-    `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
-    `• Größe: ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}\n` +
-    `• Sampler: ${DEFAULT_CONFIG.sampler_name}`,
+    `*Tipp:* Model in A1111 GUI wählen, Bot nutzt es automatisch!`,
     { parse_mode: 'Markdown' }
   );
 });
@@ -705,16 +700,22 @@ async function generateImage(chatId, prompt) {
     console.log(`[${new Date().toISOString()}] User prompt: "${prompt}"`);
     
     // 1. Set Model/VAE BEFORE generation (if configured)
-    if (DEFAULT_CONFIG.checkpoint || DEFAULT_CONFIG.vae) {
+    if (DEFAULT_CONFIG.checkpoint && DEFAULT_CONFIG.checkpoint !== "") {
       try {
-        console.log(`[API] Setting checkpoint: ${DEFAULT_CONFIG.checkpoint}, VAE: ${DEFAULT_CONFIG.vae}`);
+        console.log(`[API] Setting checkpoint: ${DEFAULT_CONFIG.checkpoint}, VAE: ${DEFAULT_CONFIG.vae || 'default'}`);
+        
+        const options = {
+          sd_model_checkpoint: DEFAULT_CONFIG.checkpoint
+        };
+        
+        // Nur VAE setzen wenn angegeben
+        if (DEFAULT_CONFIG.vae && DEFAULT_CONFIG.vae !== "") {
+          options.sd_vae = DEFAULT_CONFIG.vae;
+        }
         
         await axios.post(
           `${A1111_URL}/sdapi/v1/options`,
-          {
-            sd_model_checkpoint: DEFAULT_CONFIG.checkpoint,
-            sd_vae: DEFAULT_CONFIG.vae
-          },
+          options,
           { timeout: 60000 }  // 60s für Model-Loading
         );
         
@@ -726,13 +727,11 @@ async function generateImage(chatId, prompt) {
         
       } catch (err) {
         console.warn(`[API] Failed to set model/VAE: ${err.message}`);
-        await bot.sendMessage(chatId, 
-          `⚠️ Model konnte nicht gewechselt werden!\n` +
-          `Nutze aktuell geladenes Model.\n\n` +
-          `Fehler: ${err.message}`
-        );
         // Continue anyway - use whatever model is loaded
+        console.log(`[API] Continuing with currently loaded model`);
       }
+    } else {
+      console.log(`[API] No model switching - using currently loaded model in A1111`);
     }
     
     const session = getSession(chatId);
