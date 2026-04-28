@@ -11,13 +11,14 @@ const A1111_URL = process.env.A1111_URL || 'http://127.0.0.1:7860';
 
 // Default Settings für Bildergeneration
 const DEFAULT_CONFIG = {
-  steps: 30,
+  steps: 20,    // Reduziert für schnellere Tests
   cfg_scale: 7,
-  width: 832,   // XL Models brauchen höhere Auflösung (min 1024 in einer Dimension)
-  height: 1216, // Portrait format für Characters
+  width: 512,   // Erstmal niedrig für Tests (VRAM-schonend)
+  height: 768,  // Portrait format
   sampler_name: "DPM++ 2M Karras",
   
-  // Für SD 1.5 Models (AOM3, Counterfeit) → width: 512, height: 640
+  // Für XL Models normalerweise: width: 832, height: 1216
+  // Für SD 1.5 Models: width: 512, height: 640
   negative_prompt: "ugly, blurry, bad quality, distorted, deformed",
   seed: -1,  // Random seed
   
@@ -33,10 +34,12 @@ const DEFAULT_CONFIG = {
   
   // Character LoRA + Default Prefix
   // WICHTIG: LoRA-Name muss EXAKT dem Dateinamen in models/Lora/ entsprechen (ohne .safetensors)
+  // DEAKTIVIERT für Tests - aktiviere wenn LoRA existiert!
   loras: [
-    { name: "yuki_lora", weight: 0.8 }  // Dein Character LoRA (anpassen!)
+    // { name: "yuki_lora", weight: 0.8 }  // Dein Character LoRA (ANPASSEN!)
   ],
-  default_prompt_prefix: "yukichar, 1girl, purple hair, cat ears"  // Standard-Tags vor jedem Prompt
+  default_prompt_prefix: ""  // Leer für Tests
+  // Später: "yukichar, 1girl, purple hair, cat ears"
 };
 
 // ==================== LORA CATEGORIES ====================
@@ -273,6 +276,29 @@ bot.onText(/\/help/, (msg) => {
   );
 });
 
+bot.onText(/\/checkmodel/, async (msg) => {
+  const chatId = msg.chat.id;
+  
+  try {
+    const response = await axios.get(`${A1111_URL}/sdapi/v1/options`, { timeout: 5000 });
+    const currentModel = response.data.sd_model_checkpoint;
+    const currentVAE = response.data.sd_vae;
+    
+    bot.sendMessage(chatId,
+      `📊 *A1111 Status*\n\n` +
+      `Aktuell geladen:\n` +
+      `• Model: ${currentModel}\n` +
+      `• VAE: ${currentVAE}\n\n` +
+      `Bot Config:\n` +
+      `• Model: ${DEFAULT_CONFIG.checkpoint}\n` +
+      `• VAE: ${DEFAULT_CONFIG.vae}`,
+      { parse_mode: 'Markdown' }
+    );
+  } catch (err) {
+    bot.sendMessage(chatId, `❌ A1111 nicht erreichbar: ${err.message}`);
+  }
+});
+
 bot.onText(/\/debug/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
@@ -353,6 +379,49 @@ bot.onText(/\/aom3/, (msg) => {
   DEFAULT_CONFIG.width = 512;
   DEFAULT_CONFIG.height = 640;
   bot.sendMessage(chatId, '✅ Switched to AOM3 (512x640)');
+});
+
+// Simple test ohne LoRAs
+bot.onText(/\/test (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const prompt = match[1];
+  
+  try {
+    const statusMsg = await bot.sendMessage(chatId, '🧪 Test-Generierung (KEINE LoRAs)...');
+    
+    const payload = {
+      prompt: prompt,
+      negative_prompt: "ugly, blurry, bad quality",
+      steps: 20,
+      cfg_scale: 7,
+      width: 512,
+      height: 512,
+      sampler_name: "DPM++ 2M Karras",
+      seed: -1
+    };
+    
+    console.log('[TEST] Sending simple request:', payload);
+    
+    const response = await axios.post(
+      `${A1111_URL}/sdapi/v1/txt2img`,
+      payload,
+      { timeout: 120000 }
+    );
+    
+    const imageBase64 = response.data.images[0];
+    const imageBuffer = Buffer.from(imageBase64, 'base64');
+    
+    await bot.deleteMessage(chatId, statusMsg.message_id);
+    await bot.sendPhoto(chatId, imageBuffer, {
+      caption: `🧪 Test: ${prompt}\n512x512, 20 steps, KEINE LoRAs`
+    });
+    
+    console.log('[TEST] Success!');
+    
+  } catch (err) {
+    console.error('[TEST] Failed:', err.message);
+    bot.sendMessage(chatId, `❌ Test failed: ${err.message}`);
+  }
 });
 
 bot.onText(/\/settings/, (msg) => {
@@ -646,12 +715,22 @@ async function generateImage(chatId, prompt) {
             sd_model_checkpoint: DEFAULT_CONFIG.checkpoint,
             sd_vae: DEFAULT_CONFIG.vae
           },
-          { timeout: 30000 }
+          { timeout: 60000 }  // 60s für Model-Loading
         );
         
         console.log(`[API] Model/VAE set successfully`);
+        
+        // Wait for model to load
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log(`[API] Waited 3s for model loading`);
+        
       } catch (err) {
         console.warn(`[API] Failed to set model/VAE: ${err.message}`);
+        await bot.sendMessage(chatId, 
+          `⚠️ Model konnte nicht gewechselt werden!\n` +
+          `Nutze aktuell geladenes Model.\n\n` +
+          `Fehler: ${err.message}`
+        );
         // Continue anyway - use whatever model is loaded
       }
     }
