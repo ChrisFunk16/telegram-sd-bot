@@ -333,12 +333,12 @@ bot.onText(/\/start/, (msg) => {
     `/generate - Wizard starten\n` +
     `/settings - Einstellungen\n` +
     `/help - Hilfe\n` +
-    `/español - Cambiar a español`,
+    `/espanol - Cambiar a español`,
     { parse_mode: 'Markdown' }
   );
 });
 
-bot.onText(/\/(español|inicio)/, (msg) => {
+bot.onText(/\/(espanol|inicio)/, (msg) => {
   const chatId = msg.chat.id;
   const session = getSession(chatId);
   session.language = 'es';  // Español
