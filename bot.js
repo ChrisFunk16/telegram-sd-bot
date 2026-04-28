@@ -35,17 +35,56 @@ const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
 console.log('🤖 Telegram SD Bot gestartet!');
 
+// Clothing LoRAs
+const CLOTHING_LORAS = [
+  { name: 'asos-kokoboots-n', display: '👢 Boots' },
+  { name: 'bike_shorts_noobaI_V1.0', display: '🚴 Bike Shorts' },
+  { name: 'bra_peek_irl_goofy', display: '👙 Bra Peek' },
+  { name: 'cmo-fashion-illustriousxl-lora-nochekai', display: '👗 Fashion' },
+  { name: 'hotpants_noobaI_V1.0', display: '🩳 Hotpants' },
+  { name: 'JuicyTrackSuitILL', display: '🏃 Tracksuit' },
+  { name: 'jyojifuku_illustrious_V2.0', display: '👔 Jyojifuku' },
+  { name: 'oversized shirt_noobal_V1.0', display: '👕 Oversized Shirt' },
+  { name: 'PYGmalionWomanILL', display: '👗 Pygmalion' },
+  { name: 'SecretaryLingerieILL', display: '💼 Secretary' },
+  { name: 'taisouifuku_noobal_V1.0', display: '🤸 Gym Outfit' },
+  { name: 'thickblackhighlights_i1_v2', display: '✨ Highlights' },
+  { name: 'volleyball uniform', display: '🏐 Volleyball' },
+  { name: 'xlAEC_g102', display: '🎨 AEC Style' }
+];
+
+// Session state für User
+const userSessions = {};
+
 // /start Command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
+  
+  // Clothing Menu erstellen
+  const clothingKeyboard = [];
+  for (let i = 0; i < CLOTHING_LORAS.length; i += 2) {
+    const row = [
+      { text: CLOTHING_LORAS[i].display, callback_data: `cloth_${i}` }
+    ];
+    if (i + 1 < CLOTHING_LORAS.length) {
+      row.push({ text: CLOTHING_LORAS[i + 1].display, callback_data: `cloth_${i + 1}` });
+    }
+    clothingKeyboard.push(row);
+  }
+  
   bot.sendMessage(chatId, 
-    `🎨 *Stable Diffusion Bot*\n\n` +
-    `Sende einfach einen Text-Prompt und ich generiere ein Bild!\n\n` +
+    `🎨 *Yuki Image Generator*\n\n` +
+    `Wähle ein Outfit oder sende direkt einen Prompt!\n\n` +
     `*Commands:*\n` +
-    `/generate <prompt> - Bild generieren\n` +
+    `/clothing - Outfit wählen\n` +
     `/settings - Aktuelle Einstellungen\n` +
     `/help - Hilfe anzeigen`,
-    { parse_mode: 'Markdown' }
+    { 
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: clothingKeyboard
+      }
+    }
   );
 });
 
@@ -54,8 +93,9 @@ bot.onText(/\/help/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId,
     `*Wie benutzt man den Bot:*\n\n` +
-    `1️⃣ Sende einen Prompt: \`/generate sitting on a bench\`\n` +
-    `2️⃣ Oder schreib einfach direkt: \`walking in a forest\`\n\n` +
+    `1️⃣ Wähle Outfit mit /clothing\n` +
+    `2️⃣ Sende Prompt: \`sitting on a bench\`\n` +
+    `3️⃣ Oder direkt: \`walking in a forest\`\n\n` +
     `*Einstellungen:*\n` +
     `• Steps: ${DEFAULT_CONFIG.steps}\n` +
     `• CFG Scale: ${DEFAULT_CONFIG.cfg_scale}\n` +
@@ -64,6 +104,39 @@ bot.onText(/\/help/, (msg) => {
     `• Default Prefix: ${DEFAULT_CONFIG.default_prompt_prefix || 'Keiner'}\n\n` +
     `LoRAs und Negative Prompts sind voreingestellt. Nutze /settings für Details.`,
     { parse_mode: 'Markdown' }
+  );
+});
+
+// /clothing Command
+bot.onText(/\/clothing/, (msg) => {
+  const chatId = msg.chat.id;
+  
+  // Clothing Menu erstellen
+  const clothingKeyboard = [];
+  for (let i = 0; i < CLOTHING_LORAS.length; i += 2) {
+    const row = [
+      { text: CLOTHING_LORAS[i].display, callback_data: `cloth_${i}` }
+    ];
+    if (i + 1 < CLOTHING_LORAS.length) {
+      row.push({ text: CLOTHING_LORAS[i + 1].display, callback_data: `cloth_${i + 1}` });
+    }
+    clothingKeyboard.push(row);
+  }
+  
+  // Aktuelles Outfit anzeigen
+  const currentSession = userSessions[chatId] || {};
+  const currentClothing = currentSession.clothing || 'Keine Auswahl';
+  
+  bot.sendMessage(chatId,
+    `👗 *Wähle Outfit für Yuki*\n\n` +
+    `Aktuell: ${currentClothing}\n\n` +
+    `Klicke ein Outfit, dann sende deinen Prompt!`,
+    {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: clothingKeyboard
+      }
+    }
   );
 });
 
@@ -101,6 +174,38 @@ bot.onText(/\/generate (.+)/, async (msg, match) => {
   await generateImage(chatId, prompt);
 });
 
+// Callback Query Handler (Button Clicks)
+bot.on('callback_query', async (query) => {
+  const chatId = query.message.chat.id;
+  const data = query.data;
+  
+  // Clothing Selection
+  if (data.startsWith('cloth_')) {
+    const index = parseInt(data.replace('cloth_', ''));
+    const selectedClothing = CLOTHING_LORAS[index];
+    
+    // Session initialisieren falls nötig
+    if (!userSessions[chatId]) {
+      userSessions[chatId] = {};
+    }
+    
+    // Clothing LoRA setzen
+    userSessions[chatId].clothing = selectedClothing.display;
+    userSessions[chatId].clothingLora = selectedClothing.name;
+    
+    // Bestätigung
+    await bot.answerCallbackQuery(query.id, {
+      text: `✅ ${selectedClothing.display} ausgewählt!`
+    });
+    
+    await bot.sendMessage(chatId,
+      `✅ *Outfit gewählt:* ${selectedClothing.display}\n\n` +
+      `Sende jetzt deinen Prompt! (z.B. "sitting on a bench, sunset background")`,
+      { parse_mode: 'Markdown' }
+    );
+  }
+});
+
 // Direkte Text-Nachrichten als Prompts behandeln
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -123,7 +228,7 @@ async function generateImage(chatId, prompt) {
     // Build full prompt: LoRAs + Default Prefix + User Prompt
     let fullPrompt = '';
     
-    // 1. LoRAs hinzufügen
+    // 1. Character LoRAs hinzufügen (immer)
     if (DEFAULT_CONFIG.loras && DEFAULT_CONFIG.loras.length > 0) {
       const loraStrings = DEFAULT_CONFIG.loras.map(lora => 
         `<lora:${lora.name}:${lora.weight}>`
@@ -131,12 +236,18 @@ async function generateImage(chatId, prompt) {
       fullPrompt += loraStrings.join(' ') + ' ';
     }
     
-    // 2. Default Prefix hinzufügen
+    // 2. Clothing LoRA hinzufügen (falls gewählt)
+    const session = userSessions[chatId] || {};
+    if (session.clothingLora) {
+      fullPrompt += `<lora:${session.clothingLora}:0.7> `;
+    }
+    
+    // 3. Default Prefix hinzufügen
     if (DEFAULT_CONFIG.default_prompt_prefix) {
       fullPrompt += DEFAULT_CONFIG.default_prompt_prefix + ', ';
     }
     
-    // 3. User Prompt hinzufügen
+    // 4. User Prompt hinzufügen
     fullPrompt += prompt;
     
     console.log(`[${new Date().toISOString()}] Full prompt: "${fullPrompt}"`);
@@ -176,12 +287,18 @@ async function generateImage(chatId, prompt) {
     // Caption mit LoRA-Info (ohne Markdown wegen <> in LoRA-Syntax)
     let caption = `🎨 Prompt: ${prompt}\n\n`;
     
+    // Character LoRA Info
     if (DEFAULT_CONFIG.loras && DEFAULT_CONFIG.loras.length > 0) {
       const loraInfo = DEFAULT_CONFIG.loras.map(l => `${l.name} (${l.weight})`).join(', ');
-      caption += `LoRA: ${loraInfo}\n`;
+      caption += `Character: ${loraInfo}\n`;
     }
     
-    caption += `Steps: ${DEFAULT_CONFIG.steps} | CFG: ${DEFAULT_CONFIG.cfg_scale} | ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}`;
+    // Clothing LoRA Info
+    if (session.clothingLora) {
+      caption += `Outfit: ${session.clothing} (${session.clothingLora})\n`;
+    }
+    
+    caption += `\nSteps: ${DEFAULT_CONFIG.steps} | CFG: ${DEFAULT_CONFIG.cfg_scale} | ${DEFAULT_CONFIG.width}x${DEFAULT_CONFIG.height}`;
     
     // Bild senden (ohne parse_mode wegen LoRA <> Zeichen)
     await bot.sendPhoto(chatId, imageBuffer, {
